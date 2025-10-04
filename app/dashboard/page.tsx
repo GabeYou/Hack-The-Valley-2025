@@ -1,11 +1,13 @@
 "use client";
 import React from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import { Box, Typography, Paper, Grid } from "@mui/material";
 
 // Import MUI icons
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import AssuredWorkloadIcon from '@mui/icons-material/AssuredWorkload';
 import EmojiEventsIcon from "@mui/icons-material/EmojiEvents";
 import ShieldIcon from '@mui/icons-material/Shield';
 import GroupsIcon from "@mui/icons-material/Groups";
@@ -15,6 +17,35 @@ import LeaderboardIcon from "@mui/icons-material/Leaderboard";
 import { BarChart } from '@mui/x-charts/BarChart';
 
 export default function DashboardPage() {
+
+  const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchWallet() {
+      try {
+        const res = await fetch("/api/wallet", {
+          method: "GET",
+          credentials: "include", // <-- important if token is stored in cookies
+        });
+
+        if (!res.ok) {
+          throw new Error("Failed to fetch wallet");
+        }
+
+        const data = await res.json();
+        setWalletBalance(data.walletBalance);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchWallet();
+  }, []);
+
   // Second row stats
   const stats = [
     {
@@ -24,10 +55,10 @@ export default function DashboardPage() {
       icon: <GroupsIcon sx={{ fontSize: 40, color: "#2e7d32", mb: 1 }} />, // dark green
     },
     {
-      label: "Money Collected",
-      value: "$3,450",
+      label: "Wallet Balance",
+      value: walletBalance !== null ? `${walletBalance}` : "Loading...",
       gradient: "linear-gradient(135deg, #ffd3b6, #ffaaa5)",
-      icon: <AttachMoneyIcon sx={{ fontSize: 40, color: "#ef6c00", mb: 1 }} />, // orange
+      icon: <AssuredWorkloadIcon sx={{ fontSize: 40, color: "#ef6c00", mb: 1 }} />, // orange
     },
     {
       label: "Bounties Completed",
@@ -111,7 +142,7 @@ export default function DashboardPage() {
             >
               <AttachMoneyIcon sx={{ fontSize: 40, color: "#ef6c00", mb: 1 }} /> {/* orange */}
               <Typography variant="h6" sx={{ mb: 1, fontWeight: 500, color: "green.900" }}>
-                Amount to be Earned
+                EcoBounty Money Claimed
               </Typography>
               <Typography variant="h4" sx={{ fontWeight: "bold", color: "green.800" }}>$1,200</Typography>
             </Paper>
