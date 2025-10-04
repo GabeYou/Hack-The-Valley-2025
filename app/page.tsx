@@ -17,9 +17,9 @@ export default function Home() {
         {/* CTA Button */}
         <div className="mt-6 flex justify-center">
           <Link href="/signup">
-          <button className="px-8 py-4 bg-green-600 text-white rounded-lg text-2xl font-semibold hover:bg-green-700 transition">
+          <div className="px-8 py-4 bg-green-600 text-white rounded-lg text-2xl font-semibold hover:bg-green-700 transition">
             Start your EcoBounty Journey
-          </button>
+          </div>
           </Link>
         </div>
 

@@ -64,6 +64,18 @@
   --font-kalam: "Kalam", cursive;
   --font-patrick: "Patrick Hand", cursive;
   --font-fredericka: "Fredericka the Great", cursive;
+
+  --animate-shake-icon: rotate-shake 3s ease-in-out forwards;
+
+  @keyframes rotate-shake {
+    0% { transform: rotate(0deg); }
+    15% { transform: rotate(-15deg); }
+    30% { transform: rotate(15deg); }
+    45% { transform: rotate(-10deg); }
+    60% { transform: rotate(10deg); }
+    75% { transform: rotate(-5deg); }
+    100% { transform: rotate(0deg); }
+  }
 }
 
 @media (prefers-color-scheme: dark) {
