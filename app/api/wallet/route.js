@@ -7,7 +7,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   const { walletBalance } = await req.json();
-  const emailLower = email?.toLowerCase();
     // Try to get token from cookie first
     const cookie = req.headers.get('cookie');
     let token = null;
@@ -43,7 +42,6 @@ export async function POST(req) {
 }
 
 export async function GET(req) {
-    const emailLower = email?.toLowerCase();
       // Try to get token from cookie first
       const cookie = req.headers.get('cookie');
       let token = null;
