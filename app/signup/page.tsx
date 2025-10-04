@@ -7,6 +7,7 @@ import {
 } from '@mui/material'
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import { green } from '@mui/material/colors'
+import { useRouter } from 'next/navigation'
 
 const theme = createTheme({
   palette: {
@@ -27,6 +28,7 @@ export default function SignUpPage() {
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const [success, setSuccess] = React.useState(false)
+  const router = useRouter()
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -56,6 +58,12 @@ export default function SignUpPage() {
       }
 
       setSuccess(true)
+
+      // Redirect to login page after short delay
+      setTimeout(() => {
+        router.push('/login')
+      }, 1200)
+
     } catch (err: any) {
       setError(err.message)
     } finally {
@@ -88,13 +96,13 @@ export default function SignUpPage() {
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
             <TextField margin="normal" required fullWidth id="name" label="Full Name" name="name" autoFocus />
             <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" />
-            <TextField margin="normal" required fullWidth id="password" label="Password" name="password" />
-            <TextField margin="normal" required fullWidth id="phoneNumber" label="Phone Number" name="phoneNumber" />
-            <TextField margin="normal" required fullWidth id="address" label="Address" name="address" />
+            <TextField margin="normal" required fullWidth id="password" label="Password" name="password" type="password" />
+            <TextField margin="normal" fullWidth id="phoneNumber" label="Phone Number" name="phoneNumber" />
+            <TextField margin="normal" fullWidth id="address" label="Address" name="address" />
 
             {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-            {success && <Alert severity="success" sx={{ mt: 2 }}>Registered successfully!</Alert>}
-
+            {success && <Alert severity="success" sx={{ mt: 2 }}>Registered successfully! </Alert>}
+            {success && <Alert severity="success" sx={{ mt: 2 }}>Redirecting to login </Alert>}
             <Button
               type="submit"
               fullWidth
