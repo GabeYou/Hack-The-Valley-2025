@@ -13,10 +13,12 @@ export default function Header() {
     <header className="sticky top-0 z-50 bg-white shadow">
       <div className="w-full px-6 py-4 flex justify-between items-center">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-2 text-2xl font-bold text-black">
+        <div className="flex items-center gap-2 text-2xl font-bold text-black">
+          <div className="hover:animate-shake-icon">
             <Icon />
+          </div>
             EcoBounty
-        </Link>
+        </div>
 
         {/* Nav / CTA */}
         <div className="flex items-center gap-4">

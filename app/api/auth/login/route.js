@@ -16,7 +16,7 @@ export async function POST(req) {
     return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 });
   }
   const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
-  const cookie = `token=${token}; HttpOnly; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict`;
+  const cookie = `token=${token}; Path=/; Max-Age=${7 * 24 * 60 * 60}; SameSite=Strict`;
   return new Response(
     JSON.stringify({ id: user.id, email: user.email, name: user.name, phoneNumber: user.phoneNumber }),
     {
