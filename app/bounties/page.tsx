@@ -18,23 +18,7 @@ export default function BountiesMap() {
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   })
-  useEffect(() => {
-    fetch("/api/bounties", { credentials: "include" })
-      .then((res) => {
-        if (res.status === 401) {
-          throw new Error("Unauthorized – please log in")
-        }
-        return res.json()
-      })
-      .then((data) => {
-        setBounties(data)
-        setLoading(false)
-      })
-      .catch((err) => {
-        console.error(err)
-        setLoading(false)
-      })
-  }, [])
+
   
   useEffect(() => {
     fetch("/api/bounties")
@@ -71,7 +55,6 @@ export default function BountiesMap() {
   ]
 
   return (
-    <div style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}>
     <div style={{maxWidth:'66%'}}><GoogleMap
     mapContainerStyle={mapContainerStyle}
     zoom={13}
@@ -109,7 +92,6 @@ export default function BountiesMap() {
       </InfoWindow>
     )}
   </GoogleMap></div>
-  </div>
 
   )
 }
