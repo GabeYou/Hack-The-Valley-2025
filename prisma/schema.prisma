@@ -15,39 +15,38 @@ datasource db {
 }
 
 model User {
-  id             String   @id @default(uuid())
-  name           String
-  email          String   @unique
-  passwordHash   String
-  phoneNumber    String?  // Optional, used for coordination
-  address        String
-  location       Unsupported("geography(Point,4326)") // PostGIS geolocation
-  role           Role
-  reputation     Int      @default(0)
-  walletBalance  Int      @default(0)
-  createdAt      DateTime @default(now())
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  phoneNumber   String
+  address       String
+  reputation    Int      @default(0)
+  walletBalance Int      @default(0)
+  createdAt     DateTime @default(now())
 
-  tasksPosted        Task[]           @relation("PostedTasks")
-  contributions      TaskContribution[]
-  volunteeredTasks   TaskVolunteer[]
-  transactions       Transaction[]
-  badges             UserBadge[]
+  tasksPosted      Task[]             @relation("PostedTasks")
+  contributions    TaskContribution[]
+  volunteeredTasks TaskVolunteer[]
+  transactions     Transaction[]
+  badges           UserBadge[]
 }
 
 model Task {
-  id            String   @id @default(uuid())
-  title         String
-  description   String
-  location      Unsupported("geography(Point,4326)")
-  bountyTotal   Int      @default(0)
-  effortLevel   EffortLevel
-  status        TaskStatus
-  postedById    String
-  createdAt     DateTime @default(now())
+  id          String      @id @default(uuid())
+  title       String
+  description String
+  location    String // free-form address or "lat,lng"
+  bountyTotal Int         @default(0)
+  effortLevel EffortLevel
+  status      TaskStatus
+  postedById  String
+  createdAt   DateTime    @default(now())
 
-  postedBy      User     @relation("PostedTasks", fields: [postedById], references: [id])
+  postedBy      User               @relation("PostedTasks", fields: [postedById], references: [id])
   contributions TaskContribution[]
   volunteers    TaskVolunteer[]
+  transactions  Transaction[]
 }
 
 model TaskContribution {
@@ -57,55 +56,49 @@ model TaskContribution {
   amount    Int
   timestamp DateTime @default(now())
 
-  task      Task     @relation(fields: [taskId], references: [id])
-  user      User     @relation(fields: [userId], references: [id])
+  task Task @relation(fields: [taskId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model TaskVolunteer {
-  id         String   @id @default(uuid())
-  taskId     String
-  userId     String
-  joinedAt   DateTime @default(now())
-  completed  Boolean  @default(false)
-  proofUrl   String?
+  id        String   @id @default(uuid())
+  taskId    String
+  userId    String
+  joinedAt  DateTime @default(now())
+  completed Boolean  @default(false)
+  proofUrl  String?
 
-  task       Task     @relation(fields: [taskId], references: [id])
-  user       User     @relation(fields: [userId], references: [id])
+  task Task @relation(fields: [taskId], references: [id])
+  user User @relation(fields: [userId], references: [id])
 }
 
 model Transaction {
-  id              String   @id @default(uuid())
-  userId          String
-  type            TransactionType
-  amount          Int
-  relatedTaskId   String?
-  timestamp       DateTime @default(now())
+  id            String          @id @default(uuid())
+  userId        String
+  type          TransactionType
+  amount        Int
+  relatedTaskId String?
+  timestamp     DateTime        @default(now())
 
-  user            User     @relation(fields: [userId], references: [id])
-  relatedTask     Task?    @relation(fields: [relatedTaskId], references: [id])
+  user        User  @relation(fields: [userId], references: [id])
+  relatedTask Task? @relation(fields: [relatedTaskId], references: [id])
 }
 
 model Badge {
-  id          String   @id @default(uuid())
+  id          String      @id @default(uuid())
   name        String
   description String
   users       UserBadge[]
 }
 
 model UserBadge {
-  id        String   @id @default(uuid())
-  userId    String
-  badgeId   String
-  earnedAt  DateTime @default(now())
+  id       String   @id @default(uuid())
+  userId   String
+  badgeId  String
+  earnedAt DateTime @default(now())
 
-  user      User     @relation(fields: [userId], references: [id])
-  badge     Badge    @relation(fields: [badgeId], references: [id])
-}
-
-enum Role {
-  contributor
-  volunteer
-  both
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
 }
 
 enum EffortLevel {
@@ -120,8 +113,8 @@ enum TaskStatus {
 }
 
 enum TransactionType {
-  add_funds     // Simulated for now
-  withdraw      // Disabled for now
+  add_funds // Simulated for now
+  withdraw // Disabled for now
   task_reward
   contribution
 }
