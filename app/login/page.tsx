@@ -8,21 +8,9 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import { green } from '@mui/material/colors'
 import { useRouter } from 'next/navigation'
+import { lightTheme } from '../themes'
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: green[600],
-    },
-    secondary: {
-      main: green[300],
-    },
-    background: {
-      default: '#f5fff5',
-    },
-  },
-})
+const theme = lightTheme
 
 export default function LoginPage() {
   const [loading, setLoading] = React.useState(false)
@@ -93,8 +81,8 @@ export default function LoginPage() {
             Login
           </Typography>
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
-            <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" autoFocus />
-            <TextField margin="normal" required fullWidth name="password" label="Password" type="password" id="password" />
+            <TextField margin="normal"  autoComplete="off" required fullWidth id="email" label="Email Address" name="email" autoFocus />
+            <TextField margin="normal"  autoComplete="off" required fullWidth name="password" label="Password" type="password" id="password" />
 
             {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
             {success && <Alert severity="success" sx={{ mt: 2 }}>Login successful! Redirecting...</Alert>}
