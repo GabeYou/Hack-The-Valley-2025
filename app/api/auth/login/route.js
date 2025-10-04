@@ -7,10 +7,11 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   const { email, password } = await req.json();
-  if (!email || !password) {
+  const emailLower = email?.toLowerCase();
+  if (!emailLower || !password) {
     return new Response(JSON.stringify({ error: 'Missing email or password' }), { status: 400 });
   }
-  const user = await prisma.user.findUnique({ where: { email } });
+  const user = await prisma.user.findUnique({ where: { email: emailLower } });
   if (!user || !(await bcrypt.compare(password, user.passwordHash))) {
     return new Response(JSON.stringify({ error: 'Invalid credentials' }), { status: 401 });
   }
