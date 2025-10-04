@@ -1,12 +1,13 @@
 'use client'
 
 import * as React from 'react'
-import { 
-  Box, Button, Container, CssBaseline, TextField, Typography, Avatar, createTheme, ThemeProvider 
+import {
+  Box, Button, Container, CssBaseline, TextField,
+  Typography, Avatar, createTheme, ThemeProvider, Alert
 } from '@mui/material'
+import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import { green } from '@mui/material/colors'
-import LockOutlineIcon from '@mui/icons-material/LockOutline';
-// Create a light green theme
+
 const theme = createTheme({
   palette: {
     mode: 'light',
@@ -17,19 +18,49 @@ const theme = createTheme({
       main: green[300],
     },
     background: {
-      default: '#f5fff5', // very light green background
+      default: '#f5fff5',
     },
   },
 })
 
 export default function SignUpPage() {
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
+  const [success, setSuccess] = React.useState(false)
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+    setError(null)
+    setSuccess(false)
+    setLoading(true)
+
     const data = new FormData(event.currentTarget)
-    console.log({
+    const payload = {
+      name: data.get('name'),
       email: data.get('email'),
       password: data.get('password'),
-    })
+      phoneNumber: data.get('phoneNumber'),
+      address: data.get('address'),
+    }
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      })
+
+      if (!res.ok) {
+        const text = await res.text()
+        throw new Error(text || 'Registration failed')
+      }
+
+      setSuccess(true)
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -49,48 +80,29 @@ export default function SignUpPage() {
           }}
         >
           <Avatar sx={{ m: 1, bgcolor: 'primary.main' }}>
-            <LockOutlineIcon />
+            <LockOutlinedIcon />
           </Avatar>
           <Typography component="h1" variant="h5">
             Sign Up
           </Typography>
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="name"
-              label="Full Name"
-              name="name"
-              autoComplete="name"
-              autoFocus
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="email"
-              label="Email Address"
-              name="email"
-              autoComplete="email"
-            />
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              name="password"
-              label="Password"
-              type="password"
-              id="password"
-              autoComplete="new-password"
-            />
+            <TextField margin="normal" required fullWidth id="name" label="Full Name" name="name" autoFocus />
+            <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" />
+            <TextField margin="normal" required fullWidth id="password" label="Password" name="password" />
+            <TextField margin="normal" required fullWidth id="phoneNumber" label="Phone Number" name="phoneNumber" />
+            <TextField margin="normal" required fullWidth id="address" label="Address" name="address" />
+
+            {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+            {success && <Alert severity="success" sx={{ mt: 2 }}>Registered successfully!</Alert>}
+
             <Button
               type="submit"
               fullWidth
               variant="contained"
               sx={{ mt: 3, mb: 2 }}
+              disabled={loading}
             >
-              Sign Up
+              {loading ? 'Signing up...' : 'Sign Up'}
             </Button>
           </Box>
         </Box>
