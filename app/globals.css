@@ -1,21 +1,75 @@
+/* Handwritten / Script */
+@import url("https://fonts.googleapis.com/css2?family=Amatic+SC:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Pacifico&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap");
+
+/* Serif */
+@import url("https://fonts.googleapis.com/css2?family=Merriweather:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Libre+Baskerville:wght@400;700&display=swap");
+
+/* Sans-Serif */
+@import url("https://fonts.googleapis.com/css2?family=Raleway:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap");
+
+/* Rustic / Nature Inspired */
+@import url("https://fonts.googleapis.com/css2?family=Cabin:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Kalam:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Patrick+Hand&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fredericka+the+Great&display=swap");
+
+
 @import "tailwindcss";
 
+
+
 :root {
-  --background: #ffffff;
+  --background: #f0f0f0;
   --foreground: #171717;
+
+  --nature-bg:#D8FFB1;
+  --nature-bg-secondary:#D8FFB1;
+
 }
+
+
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  --font-amatic: "Amatic SC", cursive;
+  --font-pacifico: "Pacifico", cursive;
+  --font-shadows: "Shadows Into Light", cursive;
+  --font-dancing: "Dancing Script", cursive;
+
+  /* Serif */
+  --font-merriweather: "Merriweather", serif;
+  --font-playfair: "Playfair Display", serif;
+  --font-libre: "Libre Baskerville", serif;
+
+  /* Sans-Serif */
+  --font-raleway: "Raleway", sans-serif;
+  --font-poppins: "Poppins", sans-serif;
+  --font-quicksand: "Quicksand", sans-serif;
+  --font-nunito: "Nunito", sans-serif;
+
+  /* Rustic / Nature Inspired */
+  --font-cabin: "Cabin", sans-serif;
+  --font-kalam: "Kalam", cursive;
+  --font-patrick: "Patrick Hand", cursive;
+  --font-fredericka: "Fredericka the Great", cursive;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #D8FFB1;
+    --foreground: #D8FFB1;
   }
 }
 
