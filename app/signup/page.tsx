@@ -8,21 +8,10 @@ import {
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined'
 import { green } from '@mui/material/colors'
 import { useRouter } from 'next/navigation'
+import { lightTheme } from '../themes'
 
-const theme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: green[600],
-    },
-    secondary: {
-      main: green[300],
-    },
-    background: {
-      default: '#f5fff5',
-    },
-  },
-})
+const theme = lightTheme
+
 
 export default function SignUpPage() {
   const [loading, setLoading] = React.useState(false)
@@ -94,11 +83,11 @@ export default function SignUpPage() {
             Sign Up
           </Typography>
           <Box component="form" onSubmit={handleSubmit} noValidate sx={{ mt: 3 }}>
-            <TextField margin="normal" required fullWidth id="name" label="Full Name" name="name" autoFocus />
-            <TextField margin="normal" required fullWidth id="email" label="Email Address" name="email" />
-            <TextField margin="normal" required fullWidth id="password" label="Password" name="password" type="password" />
-            <TextField margin="normal" fullWidth id="phoneNumber" label="Phone Number" name="phoneNumber" />
-            <TextField margin="normal" fullWidth id="address" label="Address" name="address" />
+            <TextField margin="normal"  autoComplete="off" required fullWidth id="name" label="Full Name" name="name" autoFocus />
+            <TextField margin="normal"  autoComplete="off" required fullWidth id="email" label="Email Address" name="email" />
+            <TextField margin="normal"  autoComplete="off" required fullWidth id="password" label="Password" name="password" type="password" />
+            <TextField margin="normal"  autoComplete="off" fullWidth id="phoneNumber" label="Phone Number" name="phoneNumber" />
+            <TextField margin="normal"  autoComplete="off" fullWidth id="address" label="Address" name="address" />
 
             {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
             {success && <Alert severity="success" sx={{ mt: 2 }}>Registered successfully! </Alert>}
