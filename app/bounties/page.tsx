@@ -324,6 +324,7 @@ export default function BountiesMap() {
                     <>
                       {selectedTask.status === 'in_review' && (
                         <Button
+                        disableRipple
                           variant="contained"
                           color="secondary"
                           sx={{ mt: 2, width: '100%' }}
@@ -337,6 +338,9 @@ export default function BountiesMap() {
                     <>
                       {selectedTask.status === "open" && (
                         <Button
+                        disableRipple
+                        disableFocusRipple
+                        disableTouchRipple
                           variant="contained"
                           sx={{ backgroundColor: "#22c55e", "&:hover": { backgroundColor: "#16a34a" }, width: "100%" }}
                           onClick={() => handleAcceptBounty(selectedTask.id)}
@@ -366,6 +370,8 @@ export default function BountiesMap() {
                           {/* Upload Button */}
                           <label htmlFor="proof-upload">
                             <Button
+                            disableRipple
+                            disableTouchRipple
                               variant="contained"
                               component="span"
                               startIcon={<UploadFileIcon />}
@@ -396,6 +402,8 @@ export default function BountiesMap() {
 
                           {/* Submit Button */}
                           <Button
+                          disableRipple
+                          disableTouchRipple
                             type="submit"
                             variant="contained"
                             sx={{
@@ -452,6 +460,8 @@ export default function BountiesMap() {
               Available Bounties
             </Typography>
             <Button
+            disableRipple
+            disableTouchRipple
               sx={{backgroundColor:'#2f6d23'}}
               variant="contained"
               color="primary"
@@ -471,19 +481,20 @@ export default function BountiesMap() {
   }}
 > {/* Filter Switch */}
           {!showMyTasks ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1 , backgroundColor:'white'}}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1 , backgroundColor:'white',border:'2px solid #2f6d23', borderRadius:'5px'}}>
               <ToggleButtonGroup
+          
                 value={filter}
                 exclusive
                 onChange={(_, val) => val && setFilter(val)}
                 size="small"
                 color="success"
               >
-                <ToggleButton disableRipple value="all">All Open Bounties</ToggleButton>
-                <ToggleButton disableRipple value="volunteering">Volunteering</ToggleButton>
+                <ToggleButton disableRipple value="all"> Available </ToggleButton>
+                <ToggleButton disableRipple value="volunteering">Accepted </ToggleButton>
               </ToggleButtonGroup>
             </Box>
-          ):<Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1, width:'260px' }}>
+          ):<Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1, width:'168px' }}>
           
         </Box>}
     {/* My Tasks Switch */}
@@ -595,10 +606,10 @@ export default function BountiesMap() {
             </Typography>
           )}
           <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
-            <Button onClick={() => handleConfirmVerification(proofModal.taskId)} variant="contained" color="success">
+            <Button disableRipple disableTouchRipple onClick={() => handleConfirmVerification(proofModal.taskId)} variant="contained" color="success">
               Confirm
             </Button>
-            <Button onClick={() => setProofModal({ open: false, imgUrl: null, taskId: null })} variant="contained" color="error">
+            <Button disableRipple disableTouchRipple onClick={() => setProofModal({ open: false, imgUrl: null, taskId: null })} variant="contained" color="error">
               Close
             </Button>
           </Box>
