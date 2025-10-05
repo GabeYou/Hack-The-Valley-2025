@@ -40,13 +40,17 @@ export async function POST(req) {
     // Atomically ensure no volunteer yet and set status to in_progress
     try {
       const result = await prisma.$transaction(async (tx) => {
-        // Load task with status and volunteer count
+        // Load task with status, owner and volunteer count
         const task = await tx.task.findUnique({
           where: { id: taskId },
-          select: { id: true, status: true, _count: { select: { volunteers: true } } },
+          select: { id: true, status: true, postedById: true, _count: { select: { volunteers: true } } },
         });
         if (!task) {
           throw new Error('TASK_NOT_FOUND');
+        }
+        // Prevent accepting own bounty
+        if (task.postedById === userId) {
+          throw new Error('CANNOT_ACCEPT_OWN_TASK');
         }
         if (task.status !== 'open') {
           // Only allow accepting open tasks
@@ -78,6 +82,9 @@ export async function POST(req) {
       if (err instanceof Error) {
         if (err.message === 'TASK_NOT_FOUND') {
           return new Response(JSON.stringify({ error: 'Task not found' }), { status: 404 });
+        }
+        if (err.message === 'CANNOT_ACCEPT_OWN_TASK') {
+          return new Response(JSON.stringify({ error: "You can't accept your own bounty" }), { status: 403 });
         }
         if (err.message === 'TASK_NOT_OPEN') {
           return new Response(JSON.stringify({ error: 'Task is not open for acceptance' }), { status: 409 });

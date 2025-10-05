@@ -44,18 +44,25 @@ export default function BountiesMap() {
     if (isLoaded) setGeocoder(new window.google.maps.Geocoder())
   }, [isLoaded])
 
-  useEffect(() => {
+  const fetchTasks = (opts?: { withSpinner?: boolean }) => {
+    const withSpinner = opts?.withSpinner === true;
+    if (withSpinner) setLoading(true);
     fetch("/api/task")
       .then(res => res.json())
       .then(data => {
-        setTasks(data)
-        setLoading(false)
+        setTasks(data);
       })
       .catch(err => {
-        console.error("Failed to fetch tasks:", err)
-        setLoading(false)
+        console.error("Failed to fetch tasks:", err);
       })
-  }, [])
+      .finally(() => {
+        if (withSpinner) setLoading(false);
+      });
+  };
+
+  useEffect(() => {
+    fetchTasks({ withSpinner: true }); // Initial fetch shows spinner
+  }, []);
 
   // Fetch user data for contributions and volunteered tasks
   useEffect(() => {
@@ -338,16 +345,19 @@ export default function BountiesMap() {
                   ) : (
                     <>
                       {selectedTask.status === "open" && (
-                        <Button
-                        disableRipple
-                        disableFocusRipple
-                        disableTouchRipple
-                          variant="contained"
-                          sx={{ backgroundColor: "#22c55e", "&:hover": { backgroundColor: "#16a34a" }, width: "100%" }}
-                          onClick={() => handleAcceptBounty(selectedTask.id)}
-                        >
-                          Accept Bounty
-                        </Button>
+                        (userData && selectedTask.postedById === userData.id) ? (
+                          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+                            You posted this bounty.
+                          </Typography>
+                        ) : (
+                          <Button
+                            variant="contained"
+                            sx={{ backgroundColor: "#22c55e", "&:hover": { backgroundColor: "#16a34a" }, width: "100%" }}
+                            onClick={() => handleAcceptBounty(selectedTask.id)}
+                          >
+                            Accept Bounty
+                          </Button>
+                        )
                       )}
 
                       {selectedTask.status === "in_progress" && (
@@ -487,7 +497,12 @@ export default function BountiesMap() {
           
                 value={filter}
                 exclusive
-                onChange={(_, val) => val && setFilter(val)}
+                onChange={(_, val) => {
+                  if (val) {
+                    setFilter(val);
+                    fetchTasks(); // silent refresh, no spinner
+                  }
+                }}
                 size="small"
                 color="success"
               >
@@ -501,7 +516,10 @@ export default function BountiesMap() {
     {/* My Tasks Switch */}
     <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 1 }}>
             <FormControlLabel
-              control={<Switch checked={showMyTasks} onChange={() => setShowMyTasks(!showMyTasks)} />}
+              control={<Switch checked={showMyTasks} onChange={() => {
+                setShowMyTasks(!showMyTasks);
+                fetchTasks(); // silent refresh, no spinner
+              }} />}
               label="My Bounties"
             />
           </Box></div>
