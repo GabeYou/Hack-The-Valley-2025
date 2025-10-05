@@ -31,7 +31,6 @@ export default function Leaderboard() {
         const res = await fetch("/api/leaderboard");
         const data = await res.json();
 
-        // Transform API response into table-friendly format
         const fromCompleted = data.topCompleted.map((entry: any) => ({
           id: entry.user.id,
           name: entry.user.name || "Anonymous",
@@ -48,7 +47,6 @@ export default function Leaderboard() {
           moneyEarned: entry.totalEarned,
         }));
 
-        // Merge users from both leaderboards
         const mergedMap = new Map<string, any>();
         [...fromCompleted, ...fromEarned].forEach((e) => {
           if (!mergedMap.has(e.id)) {
@@ -74,7 +72,6 @@ export default function Leaderboard() {
     fetchLeaderboard();
   }, []);
 
-  // Sort entries
   const sortedEntries = [...entries].sort((a, b) => {
     switch (sortBy) {
       case "bounties":
@@ -87,92 +84,137 @@ export default function Leaderboard() {
   });
 
   return (
-    <div>
+    <>
       <Navbar />
-
       <Box
         sx={{
-          maxWidth: "900px",
-          mx: "auto",
-          mt: "64px",
-          px: 2,
-          mb: 8,
+          display: "flex",
+          height: "calc(100vh - 64px)",
+          background: "#d8ffb1",
+          position: "relative",
+          overflow: "hidden",
         }}
       >
-        <Typography
-          variant="h4"
+        {/* Left: Leaderboard (scrollable) */}
+        <Box
           sx={{
-            mb: 3,
-            fontWeight: "bold",
-            textAlign: "center",
-            color: "#171717",
-            paddingTop: "8px",
+            flex: 1,
+            maxWidth: "900px",
+            mx: "auto",
+            mt: "64px",
+            px: 2,
+            mb: 8,
+            zIndex: 1,
+            position: "relative",
+            overflowY: "auto", // makes leaderboard scrollable
           }}
         >
-          Leaderboard
-        </Typography>
-
-        {/* Sorting Dropdown */}
-        <FormControl sx={{ mb: 3, minWidth: 200, backgroundColor: "white" }}>
-          <InputLabel>Sort By</InputLabel>
-          <Select
-            value={sortBy}
-            label="Sort By"
-            onChange={(e) => setSortBy(e.target.value as any)}
-          >
-            <MenuItem value="bounties">Bounties Completed</MenuItem>
-            <MenuItem value="money">Money Earned</MenuItem>
-          </Select>
-        </FormControl>
-
-        {loading ? (
-          <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
-            <CircularProgress />
-          </Box>
-        ) : (
-          <TableContainer
-            component={Paper}
+          <Typography
+            variant="h4"
             sx={{
-              borderRadius: 3,
-              overflow: "hidden",
-              boxShadow: 5,
+              mb: 3,
+              fontWeight: "bold",
+              textAlign: "center",
+              color: "#171717",
+              paddingTop: "8px",
             }}
           >
-            <Table>
-              <TableHead>
-                <TableRow sx={{ backgroundColor: "#d8ffb1" }}>
-                  <TableCell sx={{ fontWeight: "bold" }}>#</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>User</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Bounties Completed</TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>Money Earned</TableCell>
-                </TableRow>
-              </TableHead>
+            Leaderboard
+          </Typography>
 
-              <TableBody>
-                {sortedEntries.map((entry, index) => (
-                  <TableRow
-                    key={entry.id}
-                    hover
-                    sx={{
-                      backgroundColor: index % 2 === 0 ? "#f0fff0" : "white",
-                      transition: "0.3s",
-                      "&:hover": { backgroundColor: "#d8ffb1" },
-                    }}
-                  >
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Avatar src={entry.avatar} sx={{ width: 32, height: 32 }} />
-                      <Typography>{entry.name}</Typography>
+          <FormControl sx={{ mb: 3, minWidth: 200, backgroundColor: "white" }}>
+            <InputLabel>Sort By</InputLabel>
+            <Select
+              value={sortBy}
+              label="Sort By"
+              onChange={(e) => setSortBy(e.target.value as any)}
+            >
+              <MenuItem value="bounties">Bounties Completed</MenuItem>
+              <MenuItem value="money">Money Earned</MenuItem>
+            </Select>
+          </FormControl>
+
+          {loading ? (
+            <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+              <CircularProgress />
+            </Box>
+          ) : (
+            <TableContainer
+              component={Paper}
+              sx={{
+                borderRadius: 3,
+                overflow: "hidden",
+              }}
+            >
+              <Table>
+                <TableHead>
+                  <TableRow sx={{ backgroundColor: "#d8ffb1" }}>
+                    <TableCell sx={{ fontWeight: "bold" }}>#</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>User</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      Bounties Completed
                     </TableCell>
-                    <TableCell>{entry.bountiesCompleted}</TableCell>
-                    <TableCell>${entry.moneyEarned}</TableCell>
+                    <TableCell sx={{ fontWeight: "bold" }}>
+                      Money Earned
+                    </TableCell>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
+                </TableHead>
+
+                <TableBody>
+                  {sortedEntries.map((entry, index) => (
+                    <TableRow
+                      key={entry.id}
+                      hover
+                      sx={{
+                        backgroundColor:
+                          index % 2 === 0 ? "#f0fff0" : "white",
+                        transition: "0.3s",
+                        "&:hover": { backgroundColor: "#d8ffb1" },
+                      }}
+                    >
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 1,
+                        }}
+                      >
+                        <Avatar
+                          src={entry.avatar}
+                          sx={{ width: 32, height: 32 }}
+                        />
+                        <Typography>{entry.name}</Typography>
+                      </TableCell>
+                      <TableCell>{entry.bountiesCompleted}</TableCell>
+                      <TableCell>${entry.moneyEarned}</TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+          )}
+        </Box>
+
+        {/* Right: SVG fixed */}
+        <Box
+          component="img"
+          src="/leaderboard.svg" // replace with your SVG file
+          alt="Decoration"
+          sx={{
+            flexShrink: 0,
+            width: "500px",
+            objectFit: "contain",
+            alignSelf: "center",
+            position: "sticky", // stays in place while scrolling leaderboard
+            top: "64px",
+            height: "calc(100vh - 64px)",
+            opacity: 0.8,
+            zIndex: 0,
+            pointerEvents: "none",
+          }}
+        />
       </Box>
-    </div>
+    </>
   );
 }
