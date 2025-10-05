@@ -117,7 +117,7 @@ export default function BountiesMap() {
             width: "30%",
             height: "100%",
             overflowY: "auto",
-            backgroundColor: "#fafafa",
+            backgroundColor: "#d8ffb1",
             borderLeft: "1px solid #ddd",
             padding: "1rem",
             boxSizing: "border-box",

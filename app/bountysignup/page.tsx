@@ -17,6 +17,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn'
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import { useEffect, useRef, useState } from 'react'
+import Navbar from '@/components/Navbar'
 
 export default function CreateBountyPage() {
   const { isLoaded } = useJsApiLoader({
@@ -154,179 +155,182 @@ export default function CreateBountyPage() {
     return <CircularProgress sx={{ margin: '2rem auto', display: 'block' }} />
 
   return (
+    <>
+    <Navbar />
     <div
-      style={{
-        display: 'flex',
-        height: 'calc(100vh - 64px)',
-        background: '#f5f5f5',
-        marginTop: '64px',
-      }}
-    >
-      {/* Map — 70% width */}
-      <div style={{ flex: '7 1 0', height: '100%' }}>
-        <GoogleMap
-          mapContainerStyle={{ width: '100%', height: '100%' }}
-          zoom={13}
-          center={mapCenter}
-          onClick={(e) => {
-            if (e.latLng) {
-              const newMarker = { lat: e.latLng.lat(), lng: e.latLng.lng() }
-              setMarker(newMarker)
-              setMapCenter(newMarker)
-              fetchAddress(newMarker.lat, newMarker.lng)
-            }
-          }}
-          options={{
-            disableDefaultUI: true,
-            zoomControl: true,
-            styles: [
-              { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-              { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-              { elementType: 'labels.text.fill', stylers: [{ color: '#555' }] },
-              { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
-            ],
-          }}
-        >
-          {tasks.map((t) => {
-            const [lat, lng] = t.location?.split(',').map(Number)
-            return (
-              <Marker
-                key={t.id}
-                position={{ lat, lng }}
-                onClick={() => setSelectedTask(t)}
-                icon={{ url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' }}
-              />
-            )
-          })}
-          {marker && (
-            <Marker
-              position={marker}
-              icon={{ url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' }}
-            />
-          )}
-        </GoogleMap>
-      </div>
-
-      {/* Form — 30% width */}
-      <div
-        style={{
-          flex: '3 1 0',
-          padding: '1rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: '#fafafa',
-          borderLeft: '1px solid #ddd',
-        }}
-      >
-        <Paper
-          elevation={4}
-          style={{
-            padding: '2rem',
-            width: '100%',
-            maxWidth: '420px',
-            borderRadius: '16px',
-            border: '2px solid #2f6d23',
-          }}
-        >
-          <Typography variant="h5" gutterBottom sx={{ fontWeight: '600', color: '#2f6d23' }}>
-            Create a New Task
-          </Typography>
-
-          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            <TextField label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required fullWidth />
-            <TextField label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required fullWidth multiline rows={3} />
-            <Autocomplete
-              onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-              onPlaceChanged={handlePlaceChanged}
-            >
-              <TextField
-                label="Location"
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                required
-                fullWidth
-              />
-            </Autocomplete>
-            {!showBountyInput ? (
-              <Typography
-                variant="body2"
-                sx={{
-                  color: '#2f6d23',
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  fontWeight: 'bold',
-                }}
-                onClick={() => setShowBountyInput(true)}
-              >
-                Add Initial Contribution
-              </Typography>
-            ) : (
-              <TextField
-                label="Task Total (credits)"
-                type="number"
-                value={form.bountyTotal}
-                onChange={(e) => setForm({ ...form, bountyTotal: e.target.value })}
-                fullWidth
-              />
-            )}
-          
-
-            <Button type="submit" onClick={()=>{setShowBountyInput(false)}} variant="contained" disabled={loading} sx={{ backgroundColor: '#2f6d23', '&:hover': { backgroundColor: '#25551b' }, fontWeight: 600, color: '#fff' }}>
-              {loading ? 'Creating...' : 'Create Task'}
-            </Button>
-          </form>
-
-          {message && (
-  <Typography
-    variant="body2"
-    sx={{
-      marginTop: '1rem',
-      color: messageType === 'success' ? '#2f6d23' : 'red'
+    style={{
+      display: 'flex',
+      height: 'calc(100vh - 64px)',
+      background: '#f5f5f5',
+      marginTop: '64px',
     }}
   >
-    {message}
-  </Typography>
+    {/* Map — 70% width */}
+    <div style={{ flex: '7 1 0', height: '100%' }}>
+      <GoogleMap
+        mapContainerStyle={{ width: '100%', height: '100%' }}
+        zoom={13}
+        center={mapCenter}
+        onClick={(e) => {
+          if (e.latLng) {
+            const newMarker = { lat: e.latLng.lat(), lng: e.latLng.lng() }
+            setMarker(newMarker)
+            setMapCenter(newMarker)
+            fetchAddress(newMarker.lat, newMarker.lng)
+          }
+        }}
+        options={{
+          disableDefaultUI: true,
+          zoomControl: true,
+          styles: [
+            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+            { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+            { elementType: 'labels.text.fill', stylers: [{ color: '#555' }] },
+            { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+          ],
+        }}
+      >
+        {tasks.map((t) => {
+          const [lat, lng] = t.location?.split(',').map(Number)
+          return (
+            <Marker
+              key={t.id}
+              position={{ lat, lng }}
+              onClick={() => setSelectedTask(t)}
+              icon={{ url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' }}
+            />
+          )
+        })}
+        {marker && (
+          <Marker
+            position={marker}
+            icon={{ url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' }}
+          />
+        )}
+      </GoogleMap>
+    </div>
+
+    {/* Form — 30% width */}
+    <div
+      style={{
+        flex: '3 1 0',
+        padding: '1rem',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: '#d8ffb1',
+        borderLeft: '1px solid #ddd',
+      }}
+    >
+      <Paper
+        elevation={4}
+        style={{
+          padding: '2rem',
+          width: '100%',
+          maxWidth: '420px',
+          borderRadius: '16px',
+          border: '2px solid #2f6d23',
+        }}
+      >
+        <Typography variant="h5" gutterBottom sx={{ fontWeight: '600', color: '#2f6d23' }}>
+          Create a New Task
+        </Typography>
+
+        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+          <TextField label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required fullWidth />
+          <TextField label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required fullWidth multiline rows={3} />
+          <Autocomplete
+            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
+            onPlaceChanged={handlePlaceChanged}
+          >
+            <TextField
+              label="Location"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              required
+              fullWidth
+            />
+          </Autocomplete>
+          {!showBountyInput ? (
+            <Typography
+              variant="body2"
+              sx={{
+                color: '#2f6d23',
+                cursor: 'pointer',
+                textDecoration: 'underline',
+                fontWeight: 'bold',
+              }}
+              onClick={() => setShowBountyInput(true)}
+            >
+              Add Initial Contribution
+            </Typography>
+          ) : (
+            <TextField
+              label="Task Total (credits)"
+              type="number"
+              value={form.bountyTotal}
+              onChange={(e) => setForm({ ...form, bountyTotal: e.target.value })}
+              fullWidth
+            />
+          )}
+        
+
+          <Button type="submit" onClick={()=>{setShowBountyInput(false)}} variant="contained" disabled={loading} sx={{ backgroundColor: '#2f6d23', '&:hover': { backgroundColor: '#25551b' }, fontWeight: 600, color: '#fff' }}>
+            {loading ? 'Creating...' : 'Create Task'}
+          </Button>
+        </form>
+
+        {message && (
+<Typography
+  variant="body2"
+  sx={{
+    marginTop: '1rem',
+    color: messageType === 'success' ? '#2f6d23' : 'red'
+  }}
+>
+  {message}
+</Typography>
 )}
 
-        </Paper>
-      </div>
-
-      {/* Contribute Dialog */}
-      <Dialog open={!!selectedTask} onClose={() => setSelectedTask(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px', padding: '1.5rem', backgroundColor: '#f9f9f9' } }}>
-        <DialogTitle sx={{ fontSize: '1.5rem', fontWeight: 600, color: '#2f6d23', textAlign: 'center', pb: 1 }}>
-          <ChatBubbleOutlineIcon sx={{ mr: 1 }} /> Contribute to "{selectedTask?.title}"
-        </DialogTitle>
-
-        <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, px: 3, pb: 1 }}>
-          <Paper elevation={0} sx={{ backgroundColor: '#e8f5e9', border: '1px solid #c8e6c9', borderRadius: '12px', padding: '1.25rem' }}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2f6d23', mb: 1 }}>
-              Description
-            </Typography>
-            <Typography variant="body2" sx={{ color: '#333', lineHeight: 1.5 }}>
-              {selectedTask?.description || 'No description available.'}
-            </Typography>
-
-            <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2f6d23', mt: 2 }}>
-              Current Bounty
-            </Typography>
-            <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-              <AttachMoneyIcon color="success" />
-              <Typography variant="h6" sx={{ color: '#1b5e20', fontWeight: 700 }}>
-                {selectedTask?.bountyTotal || 0} credits
-              </Typography>
-            </Box>
-          </Paper>
-
-          <TextField label="Amount to Contribute" type="number" value={amountToAdd} onChange={(e) => setAmountToAdd(e.target.value)} fullWidth sx={{ mt: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
-        </DialogContent>
-
-        <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 3, pb: 2, pt: 1 }}>
-          <Button onClick={() => setSelectedTask(null)} sx={{ color: '#555', fontWeight: 500, textTransform: 'none' }}>Cancel</Button>
-          <Button onClick={handleAddFunds} variant="contained" sx={{ backgroundColor: '#2f6d23', '&:hover': { backgroundColor: '#25551b' }, color: '#fff', fontWeight: 600, borderRadius: '10px', px: 3 }}>Add Funds</Button>
-        </DialogActions>
-      </Dialog>
+      </Paper>
     </div>
+
+    {/* Contribute Dialog */}
+    <Dialog open={!!selectedTask} onClose={() => setSelectedTask(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px', padding: '1.5rem', backgroundColor: '#f9f9f9' } }}>
+      <DialogTitle sx={{ fontSize: '1.5rem', fontWeight: 600, color: '#2f6d23', textAlign: 'center', pb: 1 }}>
+        <ChatBubbleOutlineIcon sx={{ mr: 1 }} /> Contribute to "{selectedTask?.title}"
+      </DialogTitle>
+
+      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1, px: 3, pb: 1 }}>
+        <Paper elevation={0} sx={{ backgroundColor: '#e8f5e9', border: '1px solid #c8e6c9', borderRadius: '12px', padding: '1.25rem' }}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2f6d23', mb: 1 }}>
+            Description
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#333', lineHeight: 1.5 }}>
+            {selectedTask?.description || 'No description available.'}
+          </Typography>
+
+          <Typography variant="subtitle1" sx={{ fontWeight: 600, color: '#2f6d23', mt: 2 }}>
+            Current Bounty
+          </Typography>
+          <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
+            <AttachMoneyIcon color="success" />
+            <Typography variant="h6" sx={{ color: '#1b5e20', fontWeight: 700 }}>
+              {selectedTask?.bountyTotal || 0} credits
+            </Typography>
+          </Box>
+        </Paper>
+
+        <TextField label="Amount to Contribute" type="number" value={amountToAdd} onChange={(e) => setAmountToAdd(e.target.value)} fullWidth sx={{ mt: 1, '& .MuiOutlinedInput-root': { borderRadius: '10px' } }} />
+      </DialogContent>
+
+      <DialogActions sx={{ display: 'flex', justifyContent: 'space-between', px: 3, pb: 2, pt: 1 }}>
+        <Button onClick={() => setSelectedTask(null)} sx={{ color: '#555', fontWeight: 500, textTransform: 'none' }}>Cancel</Button>
+        <Button onClick={handleAddFunds} variant="contained" sx={{ backgroundColor: '#2f6d23', '&:hover': { backgroundColor: '#25551b' }, color: '#fff', fontWeight: 600, borderRadius: '10px', px: 3 }}>Add Funds</Button>
+      </DialogActions>
+    </Dialog>
+  </div>
+    
     </>
   )
 }
