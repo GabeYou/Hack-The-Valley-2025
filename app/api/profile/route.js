@@ -7,7 +7,6 @@ const JWT_SECRET = process.env.JWT_SECRET;
 
 export async function POST(req) {
   const { name, email, password, address, phoneNumber } = await req.json();
-  const emailLower = email?.toLowerCase();
     // Try to get token from cookie first
     const cookie = req.headers.get('cookie');
     let token = null;
@@ -27,14 +26,16 @@ export async function POST(req) {
     }
     try {
       const { userId } = jwt.verify(token, JWT_SECRET);
-      const updateUser = await prisma.user.update({
+      await prisma.user.update({
         where: {
           id: userId,
         },
         data: {
           name: name,
           email: email,
-          passwordHash: await bcrypt.hash(password, 10)
+          passwordHash: await bcrypt.hash(password, 10),
+            address: address,
+            phoneNumber: phoneNumber
         },
       })
       return new Response(JSON.stringify('Success'), { status: 200 });

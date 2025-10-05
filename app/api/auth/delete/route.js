@@ -2,7 +2,7 @@ import { PrismaClient } from '@prisma/client'
 
 const prisma = new PrismaClient()
 
-export async function DELETE(req: Request) {
+export async function DELETE(req) {
   try {
     const { id, email } = await req.json()
 
@@ -30,7 +30,7 @@ export async function DELETE(req: Request) {
       JSON.stringify({ message: 'User deleted successfully' }),
       { status: 200 }
     )
-  } catch (err: any) {
+  } catch (err) {
     console.error('Delete user error:', err)
     return new Response(
       JSON.stringify({ error: 'Internal server error' }),
