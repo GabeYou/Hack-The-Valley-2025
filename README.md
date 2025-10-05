@@ -1,4 +1,5 @@
 # EcoBounty
+Empowering People to Take Action for a Better Tomorrow
 
 <img src="/public/Forest-bro.svg" width="400" height="400">
 
