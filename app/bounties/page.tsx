@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { GoogleMap, Marker, useJsApiLoader, InfoWindow } from "@react-google-maps/api"
-import { Card, CardContent, Typography, Box, Button, CardMedia, ToggleButton, ToggleButtonGroup, Switch, FormControlLabel, CircularProgress } from "@mui/material"
+import { Card, CardContent, Typography, Box, Button, CardMedia, ToggleButton, ToggleButtonGroup, Switch, FormControlLabel, CircularProgress, Modal } from "@mui/material"
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import Navbar from "@/components/Navbar"
@@ -17,6 +17,7 @@ type Task = {
   bountyTotal?: number
   status?: string
   links?: any
+  postedById?: string
 }
 
 export default function BountiesMap() {
@@ -30,6 +31,8 @@ export default function BountiesMap() {
   const [showMyTasks, setShowMyTasks] = useState(false);
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [proofModal, setProofModal] = useState<{ open: boolean; imgUrl: string | null; taskId: string | null }>({ open: false, imgUrl: null, taskId: null });
+
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
@@ -83,12 +86,39 @@ export default function BountiesMap() {
     }
   }, [tasks, geocoder])
 
+  const handleConfirmVerification = async (taskId: string | null) => {
+    if (!taskId) return;
+    try {
+      const res = await fetch(`/api/task/verify/${taskId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+      const data = await res.json();
+      if (res.ok) {
+        alert('Bounty verified successfully!');
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, status: 'completed' } : t));
+        setSelectedTask(null);
+        setProofModal({ open: false, imgUrl: null, taskId: null });
+      } else {
+        alert(data.error || 'Failed to verify bounty.');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Error verifying bounty.');
+    }
+  };
+
+  const handleVerifyBounty = (taskId: string) => {
+    const imageUrl = `/api/task/verify/${encodeURIComponent(taskId)}`;
+    setProofModal({ open: true, imgUrl: imageUrl, taskId: taskId });
+  };
+
   // Filtering logic
   let filteredTasks = tasks;
   if (showMyTasks) {
     if (userData) {
-      const myTaskIds = new Set(userData.contributions?.map((c: any) => c.taskId));
-      filteredTasks = tasks.filter((t) => myTaskIds.has(t.id));
+      filteredTasks = tasks.filter((t) => t.postedById === userData.id);
     } else {
       filteredTasks = []; // No tasks if user data is unavailable
     }
@@ -245,7 +275,9 @@ export default function BountiesMap() {
                   key={task.id}
                   position={{ lat, lng }}
                   icon={{ url: getMarkerColor(task.status || "open") }}
-                  onClick={() => setSelectedTask(task)}
+                  onClick={() => {
+                    setSelectedTask(task);
+                  }}
                 />
               )
             })}
@@ -256,93 +288,112 @@ export default function BountiesMap() {
                   lat: Number(selectedTask.location.split(",")[0]),
                   lng: Number(selectedTask.location.split(",")[1]),
                 }}
-                onCloseClick={() => setSelectedTask(null)}
-                options={{ maxWidth: 300 }}
+                onCloseClick={() => {
+                  setSelectedTask(null);
+                }}
+                options={{ maxWidth: 400 }}
               >
-                <div style={{ padding: "15px", maxWidth: "300px" }}>
+                <div style={{ padding: "15px", maxWidth: "400px" }}>
                   <Typography variant="h6" fontWeight="bold">{selectedTask.title}</Typography>
+                  <Typography variant="body2" color="text.secondary">Status: {selectedTask.status}</Typography>
                   <Typography variant="body2">{selectedTask.description}</Typography>
                   {selectedTask?.bountyTotal ? (
                     <Typography variant="body2" color="text.secondary">Total: {selectedTask.bountyTotal} credits</Typography>
                   ):<></>}
 
-                  {selectedTask.status === "open" && (
-                    <Button
-                      variant="contained"
-                      sx={{ backgroundColor: "#22c55e", "&:hover": { backgroundColor: "#16a34a" }, width: "100%" }}
-                      onClick={() => handleAcceptBounty(selectedTask.id)}
-                    >
-                      Accept Bounty
-                    </Button>
-                  )}
+                  {showMyTasks ? (
+                    <>
+                      {selectedTask.status === 'in_review' && (
+                        <Button
+                          variant="contained"
+                          color="secondary"
+                          sx={{ mt: 2, width: '100%' }}
+                          onClick={() => handleVerifyBounty(selectedTask.id)}
+                        >
+                          Verify Bounty
+                        </Button>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      {selectedTask.status === "open" && (
+                        <Button
+                          variant="contained"
+                          sx={{ backgroundColor: "#22c55e", "&:hover": { backgroundColor: "#16a34a" }, width: "100%" }}
+                          onClick={() => handleAcceptBounty(selectedTask.id)}
+                        >
+                          Accept Bounty
+                        </Button>
+                      )}
 
-{selectedTask.status === "in_progress" && (
-  <form
-    onSubmit={(e) => handleSubmitProof(e, selectedTask.id)}
-    style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "10px" }}
-  >
-    {/* Hidden file input */}
-    <input
-      id="proof-upload"
-      type="file"
-      accept="image/*"
-      style={{ display: "none" }}
-      onChange={(e) => {
-        const file = e.target.files?.[0];
-        if (file) setSelectedFile(file);
-      }}
-    />
+                      {selectedTask.status === "in_progress" && (
+                        <form
+                          onSubmit={(e) => handleSubmitProof(e, selectedTask.id)}
+                          style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "10px" }}
+                        >
+                          {/* Hidden file input */}
+                          <input
+                            id="proof-upload"
+                            type="file"
+                            accept="image/*"
+                            style={{ display: "none" }}
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) setSelectedFile(file);
+                            }}
+                          />
 
-    {/* Upload Button */}
-    <label htmlFor="proof-upload">
-      <Button
-        variant="contained"
-        component="span"
-        startIcon={<UploadFileIcon />}
-        sx={{
-          backgroundColor: "#f57c00",
-          "&:hover": { backgroundColor: "#ef6c00" },
-          fontWeight: "bold",
-          borderRadius: "8px",
-        }}
-      >
-        Upload Photo Proof
-      </Button>
-    </label>
+                          {/* Upload Button */}
+                          <label htmlFor="proof-upload">
+                            <Button
+                              variant="contained"
+                              component="span"
+                              startIcon={<UploadFileIcon />}
+                              sx={{
+                                backgroundColor: "#f57c00",
+                                "&:hover": { backgroundColor: "#ef6c00" },
+                                fontWeight: "bold",
+                                borderRadius: "8px",
+                              }}
+                            >
+                              Upload Photo Proof
+                            </Button>
+                          </label>
 
-    {/* Show selected file name */}
-    {selectedFile && (
-      <Typography variant="body2" sx={{ fontStyle: "italic", fontSize: "0.85rem" }}>
-         {selectedFile.name}
-      </Typography>
-    )}
+                          {/* Show selected file name */}
+                          {selectedFile && (
+                            <Typography variant="body2" sx={{ fontStyle: "italic", fontSize: "0.85rem" }}>
+                              {selectedFile.name}
+                            </Typography>
+                          )}
 
-    {/* Helper text */}
-    {!selectedFile && (
-      <Typography variant="caption" sx={{ color: "red", fontStyle: "italic" }}>
-        Please upload a photo to submit proof
-      </Typography>
-    )}
+                          {/* Helper text */}
+                          {!selectedFile && (
+                            <Typography variant="caption" sx={{ color: "red", fontStyle: "italic" }}>
+                              Please upload a photo to submit proof
+                            </Typography>
+                          )}
 
-    {/* Submit Button */}
-    <Button
-      type="submit"
-      variant="contained"
-      sx={{
-        backgroundColor: "#22c55e",
-        "&:hover": { backgroundColor: "#16a34a" },
-        fontWeight: "bold",
-      }}
-      disabled={!selectedFile} // Disable until file is chosen
-    >
-      Submit Proof
-    </Button>
-  </form>
-)}
+                          {/* Submit Button */}
+                          <Button
+                            type="submit"
+                            variant="contained"
+                            sx={{
+                              backgroundColor: "#22c55e",
+                              "&:hover": { backgroundColor: "#16a34a" },
+                              fontWeight: "bold",
+                            }}
+                            disabled={!selectedFile} // Disable until file is chosen
+                          >
+                            Submit Proof
+                          </Button>
+                        </form>
+                      )}
 
-
-                  {selectedTask.status === "in_review" && (
-                    <Typography variant="body2" color="warning.main">Proof submitted, awaiting review.</Typography>
+                      {selectedTask.status === "in_review" && (
+                        <Typography variant="body2" color="warning.main">Proof submitted, awaiting review.</Typography>
+                      )}
+                    </>
                   )}
                 </div>
               </InfoWindow>
@@ -458,6 +509,7 @@ export default function BountiesMap() {
                   )}
                   <CardContent>
                     <Typography variant="subtitle1" fontWeight={600}>{task.title}</Typography>
+                    <Typography variant="body2" color="text.secondary">Status: {task.status}</Typography>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{addresses[task.id] || "Loading address..."}</Typography>
                     <Typography variant="body2" color="text.secondary" noWrap>{task.description}</Typography>
                   </CardContent>
@@ -467,6 +519,45 @@ export default function BountiesMap() {
           </div>
         </div>
       </div>
+      <Modal
+        open={proofModal.open}
+        onClose={() => setProofModal({ open: false, imgUrl: null, taskId: null })}
+        aria-labelledby="proof-modal-title"
+        aria-describedby="proof-modal-description"
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      >
+        <Box
+          sx={{
+            bgcolor: 'background.paper',
+            border: '2px solid #000',
+            boxShadow: 24,
+            p: 4,
+            width: 'auto',
+            maxWidth: '500px',
+            maxHeight: '90vh',
+            overflow: 'auto',
+          }}
+        >
+          <Typography id="proof-modal-title" variant="h6" component="h2">
+            Verification Proof
+          </Typography>
+          {proofModal.imgUrl ? (
+            <img src={proofModal.imgUrl} alt="Proof" style={{ width: '100%', marginTop: '16px', borderRadius: '8px' }} />
+          ) : (
+            <Typography id="proof-modal-description" sx={{ mt: 2 }}>
+              Loading image...
+            </Typography>
+          )}
+          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
+            <Button onClick={() => handleConfirmVerification(proofModal.taskId)} variant="contained" color="success">
+              Confirm
+            </Button>
+            <Button onClick={() => setProofModal({ open: false, imgUrl: null, taskId: null })} variant="contained" color="error">
+              Close
+            </Button>
+          </Box>
+        </Box>
+      </Modal>
     </>
   )
 }

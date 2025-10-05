@@ -193,6 +193,7 @@ export async function GET() {
         location: true,
         bountyTotal: true,
         status: true,
+        postedById: true, // include creator id for frontend filtering/UI
         contributions: {
           select: {
             id: true,
