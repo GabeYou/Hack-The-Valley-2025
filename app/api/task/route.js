@@ -13,6 +13,16 @@ export async function POST(req) {
   const lon = body.lon !== undefined ? Number(body.lon) : undefined;
   const bountyTotal = body.bountyTotal !== undefined ? Number(body.bountyTotal) : undefined;
   const amount = body.amount !== undefined ? Number(body.amount) : undefined;
+  // New: normalize optional links (array of strings or single string)
+  const linksInput = Array.isArray(body.links)
+    ? body.links
+    : typeof body.links === 'string'
+    ? [body.links]
+    : [];
+  const cleanLinks = linksInput
+    .map((l) => (typeof l === 'string' ? l.trim() : ''))
+    .filter((l) => l.length > 0)
+    .slice(0, 20); // cap to a reasonable number
 
   // Try to get token from cookie first
   const cookie = req.headers.get('cookie');
@@ -78,8 +88,15 @@ export async function POST(req) {
                 amount: bountyTotal,
               },
             },
+            ...(cleanLinks.length > 0
+              ? {
+                  links: {
+                    create: cleanLinks.map((url) => ({ url })),
+                  },
+                }
+              : {}),
           },
-          include: { contributions: true },
+          include: { contributions: true, links: true },
         });
         return created;
       });
@@ -181,14 +198,14 @@ export async function GET() {
             amount: true,
             timestamp: true,
             user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
+              select: { id: true, name: true, email: true },
             },
           },
           orderBy: { timestamp: 'desc' },
+        },
+        links: {
+          select: { id: true, url: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
         },
       },
       orderBy: { createdAt: 'desc' },

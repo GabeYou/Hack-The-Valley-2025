@@ -47,6 +47,7 @@ model Task {
   contributions TaskContribution[]
   volunteers    TaskVolunteer[]
   transactions  Transaction[]
+  links         Link[]
 }
 
 model TaskContribution {
@@ -99,6 +100,15 @@ model UserBadge {
 
   user  User  @relation(fields: [userId], references: [id])
   badge Badge @relation(fields: [badgeId], references: [id])
+}
+
+model Link {
+  id        String   @id @default(uuid())
+  taskId    String
+  url       String
+  createdAt DateTime @default(now())
+
+  task Task @relation(fields: [taskId], references: [id])
 }
 
 enum EffortLevel {

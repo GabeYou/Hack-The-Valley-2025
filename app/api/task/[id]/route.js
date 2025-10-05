@@ -40,6 +40,10 @@ export async function GET(_req, { params }) {
             user: { select: { id: true, name: true, email: true } },
           },
         },
+        links: {
+          select: { id: true, url: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+        },
       },
     });
 
@@ -52,4 +56,3 @@ export async function GET(_req, { params }) {
     return new Response(JSON.stringify({ error: 'Failed to fetch task', details: e?.message }), { status: 500 });
   }
 }
-
