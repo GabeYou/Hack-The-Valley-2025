@@ -4,29 +4,30 @@ import { useEffect, useState } from "react"
 import { GoogleMap, Marker, useJsApiLoader, InfoWindow } from "@react-google-maps/api"
 import { Card, CardContent, Typography, Box } from "@mui/material"
 
-import Navbar from "@/components/Navbar";
+import Navbar from "@/components/Navbar"
 
-type Bounty = {
+type Task = {
   id: string
   title: string
   description: string
   location: string // "lat,lng"
+  bountyTotal?: number
 }
 
 export default function BountiesMap() {
-  const [bounties, setBounties] = useState<Bounty[]>([])
+  const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedBounty, setSelectedBounty] = useState<Bounty | null>(null)
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null)
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
   })
 
   useEffect(() => {
-    fetch("/api/bounties")
+    fetch("/api/task") // ✅ Changed route
       .then((res) => res.json())
       .then((data) => {
-        setBounties(data)
+        setTasks(data)
         setLoading(false)
       })
       .catch((err) => {
@@ -36,9 +37,9 @@ export default function BountiesMap() {
   }, [])
 
   if (loading || !isLoaded) return <div>Loading map...</div>
-  if (bounties.length === 0) return <div>No bounties found.</div>
+  if (tasks.length === 0) return <div>No tasks found.</div>
 
-  const firstLocation = bounties[0].location.split(",").map(Number)
+  const firstLocation = tasks[0].location.split(",").map(Number)
   const center = { lat: firstLocation[0], lng: firstLocation[1] }
 
   const mapContainerStyle = {
@@ -56,103 +57,104 @@ export default function BountiesMap() {
 
   return (
     <>
-    <Navbar/>
-    <div
-      style={{
-        display: "flex",
-        height: "100vh", // reserve 64px for navbar
-        marginTop: "64px",
-      }}
-    >
-      {/* Map Section (70%) */}
-      <div style={{ width: "70%", height: "100%" }}>
-        <GoogleMap
-          mapContainerStyle={mapContainerStyle}
-          zoom={13}
-          center={center}
-          options={{
-            styles: cleanMapStyle,
-            streetViewControl: false,
-            mapTypeControl: false,
-            fullscreenControl: false,
-          }}
-        >
-          {bounties.map((bounty) => {
-            const [lat, lng] = bounty.location.split(",").map(Number)
-            return (
-              <Marker
-                key={bounty.id}
-                position={{ lat, lng }}
-                onClick={() => setSelectedBounty(bounty)}
-              />
-            )
-          })}
-
-          {selectedBounty && (
-            <InfoWindow
-              position={{
-                lat: Number(selectedBounty.location.split(",")[0]),
-                lng: Number(selectedBounty.location.split(",")[1]),
-              }}
-              onCloseClick={() => setSelectedBounty(null)}
-            >
-              <div>
-                <h3>{selectedBounty.title}</h3>
-                <p>{selectedBounty.description}</p>
-              </div>
-            </InfoWindow>
-          )}
-        </GoogleMap>
-      </div>
-
-      {/* Right Panel (30%) */}
+      <Navbar />
       <div
         style={{
-          width: "30%",
-          height: "100%",
-          overflowY: "auto",
-          backgroundColor: "#fafafa",
-          borderLeft: "1px solid #ddd",
-          padding: "1rem",
-          boxSizing: "border-box",
+          display: "flex",
+          height: "calc(100vh - 64px)",
+          marginTop: "64px",
         }}
       >
-        <Typography variant="h6" color="black" sx={{ mb: 2 }}>
-          Available Bounties
-        </Typography>
-        <Box display="flex" flexDirection="column" gap={2}>
-          {bounties.map((bounty) => (
-            <Card
-              key={bounty.id}
-              variant="outlined"
-              sx={{
-                display: "flex",
-                flexDirection: "row",
-                alignItems: "center",
-                cursor: "pointer",
-                "&:hover": {
-                  backgroundColor: "#f0f0f0",
-                },
-              }}
-              onClick={() => {
-                const [lat, lng] = bounty.location.split(",").map(Number)
-                setSelectedBounty(bounty)
-                // optional: you could also recenter the map here
-              }}
-            >
-              <CardContent sx={{ flex: 1 }}>
-                <Typography variant="subtitle1" fontWeight={600}>
-                  {bounty.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" noWrap>
-                  {bounty.description}
-                </Typography>
-              </CardContent>
-            </Card>
-          ))}
-        </Box>
+        {/* Map Section (70%) */}
+        <div style={{ width: "70%", height: "100%" }}>
+          <GoogleMap
+            mapContainerStyle={mapContainerStyle}
+            zoom={13}
+            center={center}
+            options={{
+              styles: cleanMapStyle,
+              streetViewControl: false,
+              mapTypeControl: false,
+              fullscreenControl: false,
+            }}
+          >
+            {tasks.map((task) => {
+              const [lat, lng] = task.location.split(",").map(Number)
+              return (
+                <Marker
+                  key={task.id}
+                  position={{ lat, lng }}
+                  onClick={() => setSelectedTask(task)}
+                />
+              )
+            })}
+
+            {selectedTask && (
+              <InfoWindow
+                position={{
+                  lat: Number(selectedTask.location.split(",")[0]),
+                  lng: Number(selectedTask.location.split(",")[1]),
+                }}
+                onCloseClick={() => setSelectedTask(null)}
+              >
+                <div>
+                  <h3>{selectedTask.title}</h3>
+                  <p>{selectedTask.description}</p>
+                  {selectedTask.bountyTotal && (
+                    <Typography variant="body2">
+                      Total: {selectedTask.bountyTotal} credits
+                    </Typography>
+                  )}
+                </div>
+              </InfoWindow>
+            )}
+          </GoogleMap>
+        </div>
+
+        {/* Right Panel (30%) */}
+        <div
+          style={{
+            width: "30%",
+            height: "100%",
+            overflowY: "auto",
+            backgroundColor: "#fafafa",
+            borderLeft: "1px solid #ddd",
+            padding: "1rem",
+            boxSizing: "border-box",
+          }}
+        >
+          <Typography variant="h6" color="black" sx={{ mb: 2 }}>
+            Available Tasks
+          </Typography>
+          <Box display="flex" flexDirection="column" gap={2}>
+            {tasks.map((task) => (
+              <Card
+                key={task.id}
+                variant="outlined"
+                sx={{
+                  display: "flex",
+                  flexDirection: "row",
+                  alignItems: "center",
+                  cursor: "pointer",
+                  "&:hover": {
+                    backgroundColor: "#f0f0f0",
+                  },
+                }}
+                onClick={() => setSelectedTask(task)}
+              >
+                <CardContent sx={{ flex: 1 }}>
+                  <Typography variant="subtitle1" fontWeight={600}>
+                    {task.title}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary" noWrap>
+                    {task.description}
+                  </Typography>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        </div>
       </div>
-    </div>
     </>
   )
 }
