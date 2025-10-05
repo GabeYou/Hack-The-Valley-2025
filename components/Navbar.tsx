@@ -88,7 +88,7 @@ export default function Navbar() {
             alt="Profile"
             src="/placeholder-profile.jpg"
             onClick={() => setOpenProfile(true)}
-            sx={{ width: 32, height: 32, cursor: "pointer" }}
+            sx={{width: 32, height: 32, cursor: "pointer" }}
           />
           <Box>
             <IconButton
@@ -97,8 +97,8 @@ export default function Navbar() {
               sx={{ p: 0}}
             >
               <LogoutIcon
-                fontSize="large"
-                sx={{ color: "black" }} // Tailwind green-600
+                fontSize="medium"
+                sx={{ color: "black"}} // Tailwind green-600
               />
             </IconButton>
           </Box>
