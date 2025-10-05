@@ -4,6 +4,8 @@ import { useEffect, useState } from "react"
 import { GoogleMap, Marker, useJsApiLoader, InfoWindow } from "@react-google-maps/api"
 import { Card, CardContent, Typography, Box } from "@mui/material"
 
+import Navbar from "@/components/Navbar";
+
 type Bounty = {
   id: string
   title: string
@@ -53,11 +55,13 @@ export default function BountiesMap() {
   ]
 
   return (
+    <>
+    <Navbar/>
     <div
       style={{
         display: "flex",
-        height: "calc(100vh - 64px)", // reserve 64px for navbar
-        marginTop: "64px", // push below navbar
+        height: "100vh", // reserve 64px for navbar
+        marginTop: "64px",
       }}
     >
       {/* Map Section (70%) */}
@@ -113,7 +117,7 @@ export default function BountiesMap() {
           boxSizing: "border-box",
         }}
       >
-        <Typography variant="h6" sx={{ mb: 2 }}>
+        <Typography variant="h6" color="black" sx={{ mb: 2 }}>
           Available Bounties
         </Typography>
         <Box display="flex" flexDirection="column" gap={2}>
@@ -149,5 +153,6 @@ export default function BountiesMap() {
         </Box>
       </div>
     </div>
+    </>
   )
 }

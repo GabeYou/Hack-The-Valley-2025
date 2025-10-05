@@ -1,34 +1,85 @@
 "use client";
+import { Box, Typography, Button, Container } from "@mui/material";
 import Header from "@/components/Header";
 import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="relative h-screen w-screen bg-gradient-to-br from-green-100 to-green-200">
+    <Box
+      sx={{
+        position: "relative",
+        height: "100vh",
+        width: "100vw",
+        background: "color(#d8ffb1)",
+      }}
+    >
       {/* Header */}
       <Header />
 
       {/* Hero Section Overlay */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
+      <Container
+        maxWidth="lg"
+        sx={{
+          position: "absolute",
+          inset: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
         {/* Title */}
-        <h1 className="w-full text-center py-4 text-8xl text-black/80 font-raleway">
+        <Typography
+          variant="h1"
+          sx={{
+            fontFamily: "Raleway, sans-serif",
+            fontSize: { xs: "3rem", md: "6rem", lg: "8rem" },
+            color: "rgba(0,0,0,0.8)",
+            textAlign: "center",
+            py: 2,
+          }}
+        >
           ECOBOUNTY
-        </h1>
+        </Typography>
 
         {/* CTA Button */}
-        <div className="mt-6 flex justify-center">
-          <Link href="/signup">
-          <div className="px-8 py-4 bg-green-600 text-white rounded-lg text-2xl font-semibold hover:bg-green-700 transition">
-            Start your EcoBounty Journey
-          </div>
-          </Link>
-        </div>
+        <Box sx={{ mt: 6 }}>
+          <Button
+            component={Link}
+            href="/signup"
+            variant="contained"
+            sx={{
+              bgcolor: "#16a34a", // green-600
+              color: "white",
+              fontFamily: "Raleway, sans-serif",
+              fontSize: { xs: "1.5rem", md: "2rem" },
+              px: 1,
+              "&:hover": {
+                bgcolor: "#15803d", // green-700
+              },
+              borderRadius: 2,
+            }}
+          >
+            Start Your Eco Journey Today
+          </Button>
+        </Box>
 
         {/* Subtitle */}
-        <h2 className="absolute bottom-10 w-full text-center text-2xl text-black/70 font-raleway px-4">
+        <Typography
+          variant="h5"
+          sx={{
+            position: "absolute",
+            bottom: 40,
+            width: "100%",
+            textAlign: "center",
+            color: "rgba(0,0,0,0.7)",
+            fontFamily: "Raleway, sans-serif",
+            px: 2,
+          }}
+        >
           Take Action Today for a Cleaner Tomorrow.
-        </h2>
-      </div>
-    </div>
+        </Typography>
+      </Container>
+    </Box>
   );
 }

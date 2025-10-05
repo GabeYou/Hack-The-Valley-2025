@@ -1,40 +1,88 @@
+"use client";
 import Link from "next/link";
+import { AppBar, Toolbar, Typography, Button, Box, IconButton } from "@mui/material";
 import EnergySavingsLeafIcon from "@mui/icons-material/EnergySavingsLeaf";
-
-
-function Icon() {
-    return <EnergySavingsLeafIcon className="text-green-600" fontSize="large" />;
-  }
 
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-50 bg-white shadow">
-      <div className="w-full px-6 py-4 flex justify-between items-center">
+    <AppBar
+      position="sticky"
+      elevation={1}
+      sx={{ backgroundColor: "white", color: "black" }}
+    >
+      <Toolbar sx={{ display: "flex", justifyContent: "space-between" , height: 64 }}>
         {/* Logo */}
-        <div className="flex items-center gap-2 text-2xl font-bold text-black">
-          <div className="hover:animate-shake-icon">
-            <Icon />
-          </div>
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+        <IconButton
+          disableRipple
+          sx={{
+            p: 0,
+            "&:hover": {
+              animation: "rotate-shake 0.5s ease-in-out forwards",
+            },
+            "@keyframes rotate-shake": {
+              "0%": { transform: "rotate(0deg)" },
+              "15%": { transform: "rotate(-15deg)" },
+              "30%": { transform: "rotate(15deg)" },
+              "45%": { transform: "rotate(-10deg)" },
+              "60%": { transform: "rotate(10deg)" },
+              "75%": { transform: "rotate(-5deg)" },
+              "100%": { transform: "rotate(0deg)" },
+            },
+          }}
+        >
+          <EnergySavingsLeafIcon
+            fontSize="large"
+            sx={{ color: "green" }} // Tailwind green-600
+          />
+        </IconButton>
+          <Typography
+            variant="h6"
+            sx={{ fontWeight: "bold", fontSize: "1.5rem" }}
+          >
             EcoBounty
-        </div>
+          </Typography>
+        </Box>
 
         {/* Nav / CTA */}
-        <div className="flex items-center gap-4">
-          <Link
+        <Box sx={{ display: "flex", gap: 2 }}>
+          <Button
+            component={Link}
             href="/signup"
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+            sx={{
+              bgcolor: "#f0fdf4", // green-50
+              color: "#16a34a",    // green-600
+              border: "1px solid #16a34a",
+              "&:hover": {
+                bgcolor: "#dcfce7", // green-100 hover
+              },
+              borderRadius: 1,
+              px: 3,
+              py: 1,
+            }}
           >
             Register
-          </Link>
-          <Link
+          </Button>
+
+          <Button
+            component={Link}
             href="/login"
-            className="px-4 py-2 border border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition"
+            sx={{
+              bgcolor: "#16a34a", // green-600
+              color: "white",
+              "&:hover": {
+                bgcolor: "#15803d", // green-700
+              },
+              borderRadius: 1,
+              px: 3,
+              py: 1,
+            }}
           >
             Sign In
-          </Link>
-        </div>
-      </div>
-    </header>
+          </Button>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 }

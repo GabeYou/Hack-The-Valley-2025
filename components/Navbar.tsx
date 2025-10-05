@@ -1,7 +1,7 @@
 "use client";
 import React from "react";
 import Link from "next/link";
-import { AppBar, Toolbar, Box, Typography, Avatar } from "@mui/material";
+import { AppBar, Toolbar, Box, Typography, Avatar, IconButton } from "@mui/material";
 import EnergySavingsLeafIcon from "@mui/icons-material/EnergySavingsLeaf";
 
 export default function Navbar() {
@@ -12,19 +12,43 @@ export default function Navbar() {
   ];
 
   return (
-    <AppBar position="sticky" color="default" elevation={3}>
+    <AppBar
+      elevation={1}
+      sx={{ backgroundColor: "white", color: "black" }}
+    >
       <Toolbar sx={{ display: "flex", justifyContent: "space-between", height: 64 }}>
         {/* Left side: Logo */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <EnergySavingsLeafIcon sx={{ color: "green", fontSize: 32 }} />
+          <IconButton
+            disableRipple
+            sx={{
+              p: 0,
+              "&:hover": {
+                animation: "rotate-shake 0.6s ease-in-out forwards",
+              },
+              "@keyframes rotate-shake": {
+                "0%": { transform: "rotate(0deg)" },
+                "15%": { transform: "rotate(-15deg)" },
+                "30%": { transform: "rotate(15deg)" },
+                "45%": { transform: "rotate(-10deg)" },
+                "60%": { transform: "rotate(10deg)" },
+                "75%": { transform: "rotate(-5deg)" },
+                "100%": { transform: "rotate(0deg)" },
+              },
+            }}
+          >
+            <EnergySavingsLeafIcon
+              fontSize="large"
+              sx={{ color: "green" }} // Tailwind green-600
+            />
+          </IconButton>
+
           <Typography
-            component={Link}
-            href="/"
+            variant="h6"
             sx={{
               fontWeight: "bold",
-              color: "black",
-              textDecoration: "none",
-              cursor: "pointer",
+              fontSize: "1.5rem",
+              lineHeight: 1.2,
             }}
           >
             EcoBounty
@@ -39,18 +63,18 @@ export default function Navbar() {
               component={Link}
               href={link.href}
               sx={{
-                color: "text.primary",
+                color: "#171717",
                 textDecoration: "none",
                 fontWeight: 500,
+                fontSize: "1rem",
                 cursor: "pointer",
-                "&:hover": { textDecoration: "underline", color: "green" },
+                "&:hover": { textDecoration: "underline", color: "#16a34a" },
               }}
             >
               {link.label}
             </Typography>
           ))}
 
-          {/* Placeholder Profile Avatar */}
           <Avatar
             alt="Profile"
             src="/placeholder-profile.jpg"
