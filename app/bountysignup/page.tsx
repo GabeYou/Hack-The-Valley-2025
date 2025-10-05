@@ -12,12 +12,14 @@ import {
   DialogContent,
   DialogActions,
   Box,
+  ThemeProvider,
 } from '@mui/material'
 import LocationOnIcon from '@mui/icons-material/LocationOn'
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney'
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline'
 import { useEffect, useRef, useState } from 'react'
 import Navbar from '@/components/Navbar'
+import { lightTheme } from '../themes'
 
 export default function CreateBountyPage() {
   const { isLoaded } = useJsApiLoader({
@@ -34,10 +36,9 @@ export default function CreateBountyPage() {
   const [selectedTask, setSelectedTask] = useState<any | null>(null)
   const [amountToAdd, setAmountToAdd] = useState('')
   const [address, setAddress] = useState('')
-  const [form, setForm] = useState({ title: '', description: '', bountyTotal: '' })
+  const [form, setForm] = useState({ title: '', description: '', bountyTotal: '', photoLink: '' })
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState('')
-
   const fetchTasks = async () => {
     try {
       const res = await fetch(`api/task`)
@@ -106,7 +107,7 @@ export default function CreateBountyPage() {
           lat: marker.lat,
           lon: marker.lng,
           bountyTotal: Number(form.bountyTotal),
-        }),
+          links: form.photoLink ? [form.photoLink.trim()] : [],        }),
       })
       const data = await res.json()
       if (res.ok) {
@@ -155,7 +156,7 @@ export default function CreateBountyPage() {
     return <CircularProgress sx={{ margin: '2rem auto', display: 'block' }} />
 
   return (
-    <>
+    < >
     <Navbar />
     <div
     style={{
@@ -282,10 +283,18 @@ export default function CreateBountyPage() {
         multiline
         rows={3}
       />
+      
+
       <Autocomplete onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)} onPlaceChanged={handlePlaceChanged}>
         <TextField label="Location" value={address} onChange={(e) => setAddress(e.target.value)} required fullWidth />
       </Autocomplete>
-
+      <TextField
+      label="Photo Link "
+      placeholder="https://example.com/photo.jpg"
+      value={form.photoLink}
+      onChange={(e) => setForm({ ...form, photoLink: e.target.value })}
+      fullWidth
+      />
       {!showBountyInput ? (
         <Typography
           variant="body2"
