@@ -133,8 +133,9 @@ export default function CreateBountyPage() {
     return <CircularProgress sx={{ margin: '2rem auto', display: 'block' }} />
 
   return (
-    <div style={{ display: 'flex', height: '100vh', background: '#f5f5f5' }}>
-      <Navbar />
+    <>
+    <Navbar />
+    <div style={{ display: 'flex', height: 'calc(100vh - 64px)', background: '#d8ffb1' }}>
       <div style={{ flex: 1 }}>
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '100%' }}
@@ -195,7 +196,7 @@ export default function CreateBountyPage() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          background: '#fafafa',
+          background: '#d8ffb1',
         }}
       >
         <Paper
@@ -301,5 +302,6 @@ export default function CreateBountyPage() {
         </DialogActions>
       </Dialog>
     </div>
+    </>
   )
 }
