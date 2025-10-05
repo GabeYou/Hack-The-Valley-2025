@@ -327,5 +327,6 @@ export default function CreateBountyPage() {
         </DialogActions>
       </Dialog>
     </div>
+    </>
   )
 }

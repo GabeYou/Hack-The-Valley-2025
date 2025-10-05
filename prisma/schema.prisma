@@ -66,7 +66,7 @@ model TaskVolunteer {
   userId    String
   joinedAt  DateTime @default(now())
   completed Boolean  @default(false)
-  proofUrl  String?
+  proofUrl  Bytes?
 
   task Task @relation(fields: [taskId], references: [id])
   user User @relation(fields: [userId], references: [id])

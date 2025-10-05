@@ -10,7 +10,7 @@ export default function Home() {
         position: "relative",
         height: "100vh",
         width: "100vw",
-        background: "color(#d8ffb1)",
+        background: "#d8ffb1",
       }}
     >
       {/* Header */}
