@@ -353,6 +353,9 @@ export default function BountiesMap() {
                           </Typography>
                         ) : (
                           <Button
+                          disableRipple
+                          disableFocusRipple
+                          disableTouchRipple
                             variant="contained"
                             sx={{ backgroundColor: "#22c55e", "&:hover": { backgroundColor: "#16a34a" }, width: "100%" }}
                             onClick={() => handleAcceptBounty(selectedTask.id)}

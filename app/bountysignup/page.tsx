@@ -248,7 +248,7 @@ export default function CreateBountyPage() {
     }}
   >
     <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-    <Typography variant="h5" sx={{ fontWeight: '600', color: '#2f6d23' }}>
+    <Typography variant="h5" sx={{ fontWeight: '600', color: '#2f6d23' , paddingBottom: '5px'}}>
       Create a New Task
     </Typography>
 
