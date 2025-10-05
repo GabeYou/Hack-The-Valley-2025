@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { GoogleMap, Marker, useJsApiLoader, InfoWindow } from "@react-google-maps/api"
-import { Card, CardContent, Typography, Box, Button, CardMedia } from "@mui/material"
+import { Card, CardContent, Typography, Box, Button, CardMedia, ToggleButton, ToggleButtonGroup } from "@mui/material"
 
 import Navbar from "@/components/Navbar"
 
@@ -24,6 +24,8 @@ export default function BountiesMap() {
   // State to store fetched street addresses for tasks
   const [addresses, setAddresses] = useState<Record<string, string>>({})
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null)
+  const [filter, setFilter] = useState<'all' | 'contributed' | 'volunteering'>('all');
+  const [userData, setUserData] = useState<any>(null);
   const router = useRouter()
 
   const { isLoaded } = useJsApiLoader({
@@ -52,6 +54,14 @@ export default function BountiesMap() {
       })
   }, [])
 
+  // Fetch user data for contributions and volunteered tasks
+  useEffect(() => {
+    fetch("/api/auth/me", { credentials: "include" })
+      .then((res) => res.json())
+      .then((data) => setUserData(data))
+      .catch((err) => console.error("Failed to fetch user data:", err));
+  }, []);
+
   // Geocode task locations to get street addresses
   useEffect(() => {
     if (geocoder && tasks.length > 0) {
@@ -77,6 +87,18 @@ export default function BountiesMap() {
       })
     }
   }, [tasks, geocoder])
+
+  // Filtering logic
+  let filteredTasks = tasks;
+  if (filter === 'all') {
+    filteredTasks = tasks.filter((t) => t.status === 'open');
+  } else if (filter === 'contributed' && userData) {
+    const contributedIds = new Set(userData.contributions?.map((c: any) => c.taskId));
+    filteredTasks = tasks.filter((t) => contributedIds.has(t.id));
+  } else if (filter === 'volunteering' && userData) {
+    const volunteeringIds = new Set(userData.volunteeredTasks?.map((v: any) => v.taskId));
+    filteredTasks = tasks.filter((t) => volunteeringIds.has(t.id));
+  }
 
   if (loading || !isLoaded) return <div>Loading map...</div>
   if (tasks.length === 0) return <div>No tasks found.</div>
@@ -173,8 +195,8 @@ export default function BountiesMap() {
               ],
             }}
           >
-            {/* Render a marker for each task */}
-            {tasks.map((task) => {
+            {/* Render a marker for each filtered task */}
+            {filteredTasks.map((task) => {
               const [lat, lng] = task.location.split(",").map(Number)
               return (
                 <Marker
@@ -235,7 +257,7 @@ export default function BountiesMap() {
             backgroundColor: "#d8ffb1",
             borderLeft: "1px solid #ddd",
             boxSizing: "border-box",
-            display: "flex", // Use flexbox for sticky header
+            display: "flex",
             flexDirection: "column",
           }}
         >
@@ -266,7 +288,20 @@ export default function BountiesMap() {
               Create a Bounty
             </Button>
           </div>
-
+          {/* Filter Switch */}
+          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1 }}>
+            <ToggleButtonGroup
+              value={filter}
+              exclusive
+              onChange={(_, val) => val && setFilter(val)}
+              size="small"
+              color="success"
+            >
+              <ToggleButton value="all">All Open Tasks</ToggleButton>
+              <ToggleButton value="contributed">My Tasks</ToggleButton>
+              <ToggleButton value="volunteering">Volunteering</ToggleButton>
+            </ToggleButtonGroup>
+          </Box>
           {/* Scrollable Card List */}
           <div
             style={{
@@ -276,7 +311,7 @@ export default function BountiesMap() {
             }}
           >
             <Box display="flex" flexDirection="column" gap={2}>
-              {tasks.map((task) => (
+              {filteredTasks.map((task) => (
                <Card
                key={task.id}
                variant="outlined"
