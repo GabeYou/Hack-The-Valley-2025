@@ -47,7 +47,7 @@ export default function Navbar() {
             variant="h6"
             sx={{
               fontWeight: "bold",
-              fontSize: { xs: "1.25rem", sm: "1.5rem", md: "1.5rem" },
+              fontSize: "1.5rem",
               lineHeight: 1.2,
             }}
           >
@@ -66,7 +66,7 @@ export default function Navbar() {
                 color: "#171717",
                 textDecoration: "none",
                 fontWeight: 500,
-                fontSize: { xs: "0.875rem", sm: "1rem" },
+                fontSize: "1rem",
                 cursor: "pointer",
                 "&:hover": { textDecoration: "underline", color: "#16a34a" },
               }}

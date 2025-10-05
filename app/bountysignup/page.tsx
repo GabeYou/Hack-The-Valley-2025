@@ -13,6 +13,7 @@ import {
   DialogActions,
 } from '@mui/material'
 import { useEffect, useState } from 'react'
+import Navbar from '@/components/Navbar'
 
 export default function CreateBountyPage() {
   const { isLoaded } = useJsApiLoader({
@@ -133,7 +134,7 @@ export default function CreateBountyPage() {
 
   return (
     <div style={{ display: 'flex', height: '100vh', background: '#f5f5f5' }}>
-      {/* 🌍 Map */}
+      <Navbar />
       <div style={{ flex: 1 }}>
         <GoogleMap
           mapContainerStyle={{ width: '100%', height: '100%' }}
