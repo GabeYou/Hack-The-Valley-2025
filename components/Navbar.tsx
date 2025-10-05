@@ -1,10 +1,12 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
 import { AppBar, Toolbar, Box, Typography, Avatar, IconButton } from "@mui/material";
 import EnergySavingsLeafIcon from "@mui/icons-material/EnergySavingsLeaf";
+import ProfileModal from "./ProfileModal";
 
 export default function Navbar() {
+  const [openProfile, setOpenProfile] = useState(false);
   const links = [
     { label: "Dashboard", href: "/dashboard" },
     { label: "Bounties", href: "/bounties" },
@@ -78,12 +80,13 @@ export default function Navbar() {
           <Avatar
             alt="Profile"
             src="/placeholder-profile.jpg"
-            component={Link}
-            href="/profile"
+            onClick={() => setOpenProfile(true)}
             sx={{ width: 32, height: 32, cursor: "pointer" }}
           />
         </Box>
       </Toolbar>
+      {/* Modal lives at navbar level so it overlays current page without navigation */}
+      <ProfileModal open={openProfile} onClose={() => setOpenProfile(false)} />
     </AppBar>
   );
 }
