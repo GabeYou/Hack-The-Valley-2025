@@ -164,12 +164,31 @@ export default function BountiesMap() {
 
   const getMarkerColor = (status: string) => {
     switch (status) {
-      case "in_progress": return "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
-      case "in_review": return "http://maps.google.com/mapfiles/ms/icons/orange-dot.png"
-      default: return "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+      case "in_progress":
+        return "http://maps.google.com/mapfiles/ms/icons/blue-dot.png";
+      case "in_review":
+        return "http://maps.google.com/mapfiles/ms/icons/orange-dot.png";
+      case "completed":
+        return "http://maps.google.com/mapfiles/ms/icons/red-dot.png";
+      default:
+        return "http://maps.google.com/mapfiles/ms/icons/green-dot.png";
     }
-  }
-
+  };
+  
+  const getMarkerColorValue = (status: string): string => {
+    switch (status) {
+      case "in_progress":
+        return "#3B82F6"; // blue-500
+      case "in_review":
+        return "#F59E0B"; // orange-500
+      case "completed":
+        return "#EF4444"; // red
+      default:
+        return "#22C55E"; // green
+    }
+  };
+  
+  
   const handleAcceptBounty = async (taskId: string) => {
     try {
       const res = await fetch("/api/task/accept", {
@@ -293,9 +312,8 @@ export default function BountiesMap() {
                 }}
                 options={{ maxWidth: 400 }}
               >
-                <div style={{ padding: "15px", maxWidth: "400px" }}>
+                <div style={{ padding: "15px", maxWidth: "400px" , gap: '10px'}}>
                   <Typography variant="h6" fontWeight="bold">{selectedTask.title}</Typography>
-                  <Typography variant="body2" color="text.secondary">Status: {selectedTask.status}</Typography>
                   <Typography variant="body2">{selectedTask.description}</Typography>
                   {selectedTask?.bountyTotal ? (
                     <Typography variant="body2" color="text.secondary">Total: {selectedTask.bountyTotal} credits</Typography>
@@ -442,7 +460,14 @@ export default function BountiesMap() {
           </div>
 
       
-<div style={{display:'flex', justifyContent: 'space-evenly'}}> {/* Filter Switch */}
+          <div
+  style={{
+    display: 'flex',
+    justifyContent: 'space-evenly',
+    borderBottom: '2px solid #b5d996', // light grey bottom border
+    paddingBottom: '5px',           // space so it looks nice
+  }}
+> {/* Filter Switch */}
           {!showMyTasks ? (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1 , backgroundColor:'white'}}>
               <ToggleButtonGroup
@@ -508,8 +533,27 @@ export default function BountiesMap() {
                     />
                   )}
                   <CardContent>
-                    <Typography variant="subtitle1" fontWeight={600}>{task.title}</Typography>
-                    <Typography variant="body2" color="text.secondary">Status: {task.status}</Typography>
+                    <Box display="flex" alignItems="center" justifyContent="space-between">
+                      <Typography variant="subtitle1" fontWeight={600}>{task.title}</Typography>
+                      <Box
+                        sx={{
+                          backgroundColor: getMarkerColorValue(task.status || "open"),
+                          color: "white",
+                          borderRadius: "12px",
+                          padding: "2px 8px",
+                          fontSize: "0.75rem",
+                          fontWeight: "bold",
+                          textTransform: "capitalize",
+                          display: "inline-block",
+                        }}
+                      >
+                        {task.status === "in_progress" ? "In Progress" :
+                         task.status === "in_review" ? "In Review" :
+                         task.status === "completed" ? "Completed" :
+                         task.status === "open" ? "Open" :
+                         task.status || "Unknown"}
+                      </Box>
+                    </Box>
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{addresses[task.id] || "Loading address..."}</Typography>
                     <Typography variant="body2" color="text.secondary" noWrap>{task.description}</Typography>
                   </CardContent>
