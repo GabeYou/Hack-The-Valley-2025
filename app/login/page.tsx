@@ -49,7 +49,7 @@ export default function LoginPage() {
 
       setTimeout(() => {
         router.push('/dashboard')
-      }, 1000)
+      }, 0)
 
     } catch (err: any) {
       setError(err.message)
