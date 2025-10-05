@@ -234,6 +234,7 @@ export default function BountiesMap() {
       if (res.ok) {
         alert("Proof submitted successfully!")
         setSelectedTask(null)
+        setSelectedFile(null)
         setTasks(tasks.map(t => t.id === taskId ? { ...t, status: "in_review" } : t))
       } else {
         alert(data.error || "Failed to submit proof.")
@@ -352,6 +353,7 @@ export default function BountiesMap() {
                           {/* Hidden file input */}
                           <input
                             id="proof-upload"
+                            name="file"
                             type="file"
                             accept="image/*"
                             style={{ display: "none" }}
