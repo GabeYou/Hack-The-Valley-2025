@@ -29,22 +29,21 @@ export async function GET(req) {
   }
 
   // Get all volunteered tasks where completed is true
-  const volunteered = await prisma.taskVolunteer.findMany({
+  const completedVolunteeredTasks = await prisma.taskVolunteer.findMany({
     where: { userId, completed: true },
-    select: { taskId: true },
+    include: {
+      task: {
+        select: {
+          bountyTotal: true,
+        },
+      },
+    },
   });
 
-  const taskIds = volunteered.map(v => v.taskId);
-
-  // Sum the amount from TaskContribution for all these tasks
-  let totalEarned = 0;
-  if (taskIds.length > 0) {
-    const sum = await prisma.taskContribution.aggregate({
-      where: { taskId: { in: taskIds } },
-      _sum: { amount: true },
-    });
-    totalEarned = sum._sum.amount || 0;
-  }
+  // Sum the bountyTotal from each completed task
+  const totalEarned = completedVolunteeredTasks.reduce((sum, volunteerRecord) => {
+    return sum + (volunteerRecord.task?.bountyTotal || 0);
+  }, 0);
 
   return new Response(JSON.stringify({ totalEarned }), { status: 200 });
 }
