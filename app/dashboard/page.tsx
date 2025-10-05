@@ -110,6 +110,7 @@ export default function DashboardPage() {
               sx={{
                 p: 4,
                 flex: 1,
+                border: '2px solid #2f6d23',
                 borderRadius: 3,
                 textAlign: "center",
                 bgcolor: "linear-gradient(135deg, #e0f7fa, #b2ebf2)",
@@ -136,6 +137,7 @@ export default function DashboardPage() {
               sx={{
                 p: 4,
                 flex: 1,
+                border: '2px solid #2f6d23',
                 borderRadius: 3,
                 textAlign: "center",
                 bgcolor: "linear-gradient(135deg, #fff3e0, #ffe0b2)",
@@ -162,6 +164,8 @@ export default function DashboardPage() {
               sx={{
                 p: 4,
                 flex: 1,
+                border: '2px solid #2f6d23',
+
                 borderRadius: 3,
                 textAlign: "center",
                 bgcolor: "linear-gradient(135deg, #f1f8e9, #dcedc1)",
@@ -187,6 +191,8 @@ export default function DashboardPage() {
             <Paper
               sx={{
                 p: 3,
+                border: '2px solid #2f6d23',
+
                 borderRadius: 3,
                 flex: 1,
                 display: "flex",
@@ -239,6 +245,8 @@ export default function DashboardPage() {
                   p: 4,
                   textAlign: "center",
                   bgcolor: stat.gradient,
+                  border: '2px solid #2f6d23',
+
                   borderRadius: 3,
                   flex: 1,
                   transition: "transform 0.2s",
@@ -264,6 +272,7 @@ export default function DashboardPage() {
           <Paper
               sx={{
                 p: 3,
+                border: '2px solid #2f6d23',
                 borderRadius: 3,
                 flex: 1,
                 textAlign: "center",
