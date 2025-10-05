@@ -3,7 +3,14 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { AppBar, Toolbar, Box, Typography, Avatar, IconButton } from "@mui/material";
 import EnergySavingsLeafIcon from "@mui/icons-material/EnergySavingsLeaf";
+import LogoutIcon from '@mui/icons-material/Logout';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import ProfileModal from "./ProfileModal";
+
+function logout() {
+  document.cookie = "token=; path=/; max-age=0";
+  window.location.href = "/login"; // redirect after logout
+}
 
 export default function Navbar() {
   const [openProfile, setOpenProfile] = useState(false);
@@ -83,6 +90,18 @@ export default function Navbar() {
             onClick={() => setOpenProfile(true)}
             sx={{ width: 32, height: 32, cursor: "pointer" }}
           />
+          <Box>
+            <IconButton
+              onClick={() => logout()}
+              disableRipple
+              sx={{ p: 0}}
+            >
+              <LogoutIcon
+                fontSize="large"
+                sx={{ color: "black" }} // Tailwind green-600
+              />
+            </IconButton>
+          </Box>
         </Box>
       </Toolbar>
       {/* Modal lives at navbar level so it overlays current page without navigation */}
