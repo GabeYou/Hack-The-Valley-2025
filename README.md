@@ -24,14 +24,12 @@ We built EcoBounty using React, Material-UI and TailwindCSS for the front-end. W
 
 Initially, we started building the UI with TailwindCSS and developed some components and pages. However, we later realized that Material UI (MUI) would be easier to use. This meant we had to remake some components and pages in MUI, which was time-consuming.
 
-[other stuff]
 
 
 ## Accomplishments that we're proud of
 
 Front Page Design
 
-[other stuff]
 
 ## What we learned
 
