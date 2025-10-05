@@ -37,29 +37,58 @@ export async function POST(req) {
       return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401 });
     }
 
-    // Ensure the task exists
-    const task = await prisma.task.findUnique({ where: { id: taskId }, select: { id: true } });
-    if (!task) {
-      return new Response(JSON.stringify({ error: 'Task not found' }), { status: 404 });
+    // Atomically ensure no volunteer yet and set status to in_progress
+    try {
+      const result = await prisma.$transaction(async (tx) => {
+        // Load task with status and volunteer count
+        const task = await tx.task.findUnique({
+          where: { id: taskId },
+          select: { id: true, status: true, _count: { select: { volunteers: true } } },
+        });
+        if (!task) {
+          throw new Error('TASK_NOT_FOUND');
+        }
+        if (task.status !== 'open') {
+          // Only allow accepting open tasks
+          throw new Error('TASK_NOT_OPEN');
+        }
+        if (task._count.volunteers > 0) {
+          // Solo-only guard: someone already volunteering
+          throw new Error('TASK_ALREADY_VOLUNTEERED');
+        }
+
+        const volunteer = await tx.taskVolunteer.create({
+          data: {
+            taskId,
+            userId,
+          },
+        });
+
+        const updatedTask = await tx.task.update({
+          where: { id: taskId },
+          data: { status: 'in_progress' },
+          select: { id: true, status: true },
+        });
+
+        return { volunteer, task: updatedTask };
+      });
+
+      return new Response(JSON.stringify(result), { status: 201 });
+    } catch (err) {
+      if (err instanceof Error) {
+        if (err.message === 'TASK_NOT_FOUND') {
+          return new Response(JSON.stringify({ error: 'Task not found' }), { status: 404 });
+        }
+        if (err.message === 'TASK_NOT_OPEN') {
+          return new Response(JSON.stringify({ error: 'Task is not open for acceptance' }), { status: 409 });
+        }
+        if (err.message === 'TASK_ALREADY_VOLUNTEERED') {
+          return new Response(JSON.stringify({ error: 'Task already has a volunteer' }), { status: 409 });
+        }
+      }
+      return new Response(JSON.stringify({ error: 'Failed to accept task' }), { status: 500 });
     }
-
-    // Enforce solo-only: ensure no existing volunteer on this task
-    const volunteerCount = await prisma.taskVolunteer.count({ where: { taskId } });
-    if (volunteerCount > 0) {
-      return new Response(JSON.stringify({ error: 'Task already has a volunteer' }), { status: 409 });
-    }
-
-    // Create the volunteer record
-    const volunteer = await prisma.taskVolunteer.create({
-      data: {
-        taskId,
-        userId,
-      },
-    });
-
-    return new Response(JSON.stringify({ volunteer }), { status: 201 });
   } catch (e) {
     return new Response(JSON.stringify({ error: 'Failed to accept task', details: e?.message }), { status: 500 });
   }
 }
-

@@ -39,7 +39,7 @@ model Task {
   location    String // free-form address or "lat,lng"
   bountyTotal Int         @default(0)
   effortLevel EffortLevel
-  status      TaskStatus
+  status      TaskStatus  @default(open)
   postedById  String
   createdAt   DateTime    @default(now())
 
@@ -109,6 +109,7 @@ enum EffortLevel {
 enum TaskStatus {
   open
   in_progress
+  in_review
   completed
 }
 
