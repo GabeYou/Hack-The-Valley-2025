@@ -35,12 +35,23 @@ export async function GET(req) {
                                         email: true,
                                         name: true,
                                         phoneNumber: true,
-                                        // Exclude passwordHash and other sensitive fields
                                     }
                                 },
                             },
                         },
                     },
+                },
+                contributions: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                email: true,
+                                name: true,
+                                phoneNumber: true,
+                            }
+                        }
+                    }
                 },
             },
         });
@@ -52,6 +63,7 @@ export async function GET(req) {
                 name: user.name,
                 phoneNumber: user.phoneNumber,
                 volunteeredTasks: user.volunteeredTasks,
+                contributions: user.contributions,
             }),
             { status: 200 }
         );
