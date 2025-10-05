@@ -1,40 +1,82 @@
 'use client'
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { GoogleMap, Marker, useJsApiLoader, InfoWindow } from "@react-google-maps/api"
-import { Card, CardContent, Typography, Box } from "@mui/material"
+import { Card, CardContent, Typography, Box, Button, CardMedia } from "@mui/material"
 
 import Navbar from "@/components/Navbar"
 
+// Updated Task type to include a photo
 type Task = {
   id: string
   title: string
   description: string
   location: string // "lat,lng"
   bountyTotal?: number
+  links?: any // Optional photo URL
 }
 
 export default function BountiesMap() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
+  // State to store fetched street addresses for tasks
+  const [addresses, setAddresses] = useState<Record<string, string>>({})
+  const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null)
+  const router = useRouter()
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    libraries: ["places"],
   })
 
+  // Initialize the geocoder once the Google Maps script is loaded
   useEffect(() => {
-    fetch("/api/task") // ✅ Changed route
+    if (isLoaded) {
+      setGeocoder(new window.google.maps.Geocoder())
+    }
+  }, [isLoaded])
+
+  // Fetch tasks from the API
+  useEffect(() => {
+    fetch("/api/task")
       .then((res) => res.json())
       .then((data) => {
         setTasks(data)
         setLoading(false)
       })
       .catch((err) => {
-        console.error(err)
+        console.error("Failed to fetch tasks:", err)
         setLoading(false)
       })
   }, [])
+
+  // Geocode task locations to get street addresses
+  useEffect(() => {
+    if (geocoder && tasks.length > 0) {
+      const geocodePromises = tasks.map((task) => {
+        const [lat, lng] = task.location.split(",").map(Number)
+        return new Promise<[string, string]>((resolve) => {
+          geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+            if (status === "OK" && results && results[0]) {
+              // Resolve with task ID and the formatted address
+              resolve([task.id, results[0].formatted_address])
+            } else {
+              // Handle cases where geocoding fails
+              console.log(`Geocode was not successful for the following reason: ${status}`)
+              resolve([task.id, "Address not available"])
+            }
+          })
+        })
+      })
+
+      // After all geocoding requests are complete, update the addresses state
+      Promise.all(geocodePromises).then((addressResults) => {
+        setAddresses(Object.fromEntries(addressResults))
+      })
+    }
+  }, [tasks, geocoder])
 
   if (loading || !isLoaded) return <div>Loading map...</div>
   if (tasks.length === 0) return <div>No tasks found.</div>
@@ -47,6 +89,7 @@ export default function BountiesMap() {
     height: "100%",
   }
 
+  // A clean map style to hide unnecessary labels and features
   const cleanMapStyle = [
     { featureType: "poi", stylers: [{ visibility: "off" }] },
     { featureType: "transit", stylers: [{ visibility: "off" }] },
@@ -61,8 +104,7 @@ export default function BountiesMap() {
       <div
         style={{
           display: "flex",
-          height: "calc(100vh - 64px)",
-          marginTop: "64px",
+          height: "calc(100vh - 64px)", // Full height minus navbar
         }}
       >
         {/* Map Section (70%) */}
@@ -72,12 +114,39 @@ export default function BountiesMap() {
             zoom={13}
             center={center}
             options={{
-              styles: cleanMapStyle,
-              streetViewControl: false,
-              mapTypeControl: false,
+              disableDefaultUI: true,         // disables all controls initially
+              zoomControl: true,              // re-enable zoom buttons
+              mapTypeControl: true,           // re-enable satellite toggle
+              mapTypeControlOptions: {
+                style: google.maps.MapTypeControlStyle.DEFAULT,
+                position: google.maps.ControlPosition.TOP_LEFT,
+              },
               fullscreenControl: false,
+              streetViewControl: false,
+              scaleControl: false,
+              rotateControl: false,
+              clickableIcons: false,          // disables default POI clicks
+            
+              styles: [
+                // Hide all points of interest (businesses, landmarks, etc.)
+                { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+            
+                // Hide transit stops, bus routes, etc.
+                { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+            
+                // Hide road labels for a cleaner look
+                { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+            
+                // Desaturate land colors slightly for clarity
+                { elementType: 'geometry', stylers: [{ saturation: -10 }] },
+            
+                // Improve label legibility
+                { elementType: 'labels.text.fill', stylers: [{ color: '#555' }] },
+                { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+              ],
             }}
           >
+            {/* Render a marker for each task */}
             {tasks.map((task) => {
               const [lat, lng] = task.location.split(",").map(Number)
               return (
@@ -89,6 +158,7 @@ export default function BountiesMap() {
               )
             })}
 
+            {/* Show an InfoWindow when a task is selected */}
             {selectedTask && (
               <InfoWindow
                 position={{
@@ -97,11 +167,17 @@ export default function BountiesMap() {
                 }}
                 onCloseClick={() => setSelectedTask(null)}
               >
-                <div>
-                  <h3>{selectedTask.title}</h3>
-                  <p>{selectedTask.description}</p>
+                {/* InfoWindow content */}
+                <div style={{ padding: '10px', maxWidth: '250px' }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <Typography variant="subtitle1" fontWeight="bold" component="h3">
+                            {selectedTask.title}
+                        </Typography>
+                        {/* The close button is part of the InfoWindow component */}
+                   </div>
+                  <Typography variant="body2" sx={{ mb: 1 }}>{selectedTask.description}</Typography>
                   {selectedTask.bountyTotal && (
-                    <Typography variant="body2">
+                    <Typography variant="body2" color="text.secondary">
                       Total: {selectedTask.bountyTotal} credits
                     </Typography>
                   )}
@@ -116,43 +192,97 @@ export default function BountiesMap() {
           style={{
             width: "30%",
             height: "100%",
-            overflowY: "auto",
             backgroundColor: "#d8ffb1",
             borderLeft: "1px solid #ddd",
-            padding: "1rem",
             boxSizing: "border-box",
+            display: "flex", // Use flexbox for sticky header
+            flexDirection: "column",
           }}
         >
-          <Typography variant="h6" color="black" sx={{ mb: 2 }}>
-            Available Tasks
-          </Typography>
-          <Box display="flex" flexDirection="column" gap={2}>
-            {tasks.map((task) => (
-              <Card
-                key={task.id}
-                variant="outlined"
-                sx={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  cursor: "pointer",
-                  "&:hover": {
-                    backgroundColor: "#f0f0f0",
-                  },
-                }}
-                onClick={() => setSelectedTask(task)}
-              >
-                <CardContent sx={{ flex: 1 }}>
-                  <Typography variant="subtitle1" fontWeight={600}>
-                    {task.title}
-                  </Typography>
-                  <Typography variant="body2" color="text.secondary" noWrap>
-                    {task.description}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
-          </Box>
+          {/* Sticky Header */}
+          <div
+            style={{
+              padding: "20px",
+              borderBottom: "1px solid #b5d996",
+              backgroundColor: "#c2f293", 
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              position: "sticky",
+              top: 0,
+              zIndex: 1,
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+            }}
+          >
+            <Typography variant="h5" color="#2f6d23" sx={{ fontWeight:500,mb: 0}}>
+              Available Bounties
+            </Typography>
+            <Button
+              sx={{backgroundColor:'#2f6d23'}}
+              variant="contained"
+              color="primary"
+              onClick={() => router.push("/bountysignup")}
+            >
+              Create a Bounty
+            </Button>
+          </div>
+
+          {/* Scrollable Card List */}
+          <div
+            style={{
+              overflowY: "auto", // Make only this container scrollable
+              flex: 1, // Allow this container to grow and fill available space
+              padding: "1rem",
+            }}
+          >
+            <Box display="flex" flexDirection="column" gap={2}>
+              {tasks.map((task) => (
+               <Card
+               key={task.id}
+               variant="outlined"
+               sx={{
+                 cursor: "pointer",
+                 backgroundColor: "#fff",
+                 border: "2px solid rgb(47, 109, 35)",
+                 borderRadius: "12px",
+                 boxShadow: "0 1px 3px rgba(0, 0, 0, 0.1)",
+                 transition: "all 0.2s ease-in-out",
+                 "&:hover": {
+                   backgroundColor: "#f9f9f9",
+                   borderColor: "rgb(34, 78, 25)",
+                   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.2)",
+                   transform: "translateY(-2px)",
+                 },
+               }}
+               onClick={() => setSelectedTask(task)}
+             >
+             
+                  {/* Display photo if available */}
+                  {task.links && (
+                    <CardMedia
+                    style={{padding: '10px'}}
+                      component="img"
+                      height="140"
+                      image={task.links[0]?.url}
+                      alt={`Photo for ${task.title}`}
+                    />
+                  )}
+                  <CardContent>
+                    <Typography variant="subtitle1" fontWeight={600}>
+                      {task.title}
+                    </Typography>
+                    {/* Display the fetched street address */}
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                      {addresses[task.id] || "Loading address..."}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>
+                      {task.description}
+                    </Typography>
+                  </CardContent>
+                </Card>
+              ))}
+            </Box>
+          </div>
         </div>
       </div>
     </>
