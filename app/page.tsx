@@ -2,6 +2,7 @@
 import { Box, Typography, Button, Container } from "@mui/material";
 import Header from "@/components/Header";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function Home() {
   return (
@@ -11,74 +12,101 @@ export default function Home() {
         height: "100vh",
         width: "100vw",
         background: "#d8ffb1",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
       }}
     >
       {/* Header */}
       <Header />
 
-      {/* Hero Section Overlay */}
+      {/* Background SVG */}
+      <Box
+        sx={{
+          position: "absolute",
+          top: "50%",
+          left: "50%",
+          transform: "translate(-50%, -50%)",
+          width: { xs: "80%", md: "60%", lg: "50%" },
+          height: "auto",
+          zIndex: 0,
+          opacity: 0.15,
+        }}
+      >
+        <Image
+          src="/forest-bro.svg"
+          alt="Forest Illustration"
+          width={800}
+          height={800}
+          style={{ width: "100%", height: "auto" }}
+        />
+      </Box>
+
+      {/* Foreground Content */}
       <Container
         maxWidth="lg"
         sx={{
-          position: "absolute",
-          inset: 0,
+          position: "relative",
+          zIndex: 1,
+          flex: 1,
           display: "flex",
           flexDirection: "column",
+          justifyContent: "center", // vertical centering
           alignItems: "center",
-          justifyContent: "center",
+          textAlign: "center",
+          gap: 4,
         }}
       >
-        {/* Title */}
-        <Typography
-          variant="h1"
-          sx={{
-            fontFamily: "Raleway, sans-serif",
-            fontSize: { xs: "3rem", md: "6rem", lg: "8rem" },
-            color: "rgba(0,0,0,0.8)",
-            textAlign: "center",
-            py: 2,
-          }}
-        >
-          ECOBOUNTY
-        </Typography>
-
-        {/* CTA Button */}
-        <Box sx={{ mt: 6 }}>
-          <Button
-            component={Link}
-            href="/signup"
-            variant="contained"
+        {/* Title + Subtitle */}
+        <Box>
+          <Typography
+            variant="h1"
             sx={{
-              bgcolor: "#16a34a", // green-600
-              color: "white",
               fontFamily: "Raleway, sans-serif",
-              fontSize: { xs: "1.5rem", md: "2rem" },
-              px: 1,
-              "&:hover": {
-                bgcolor: "#15803d", // green-700
-              },
-              borderRadius: 2,
+              fontSize: { xs: "3rem", md: "6rem", lg: "7rem" },
+              color: "rgba(0,0,0,0.85)",
             }}
           >
-            Start Your Eco Journey Today
-          </Button>
-        </Box>
+            ECOBOUNTY
+          </Typography>
 
-        {/* Subtitle */}
-        <Typography
-          variant="h5"
+          <Typography
+            variant="h5"
+            sx={{
+              mt: 1,
+              color: "rgba(0,0,0,0.7)",
+              fontFamily: "Raleway, sans-serif",
+            }}
+          >
+            Take Action Today for a Cleaner Tomorrow.
+          </Typography>
+        </Box>
+      {/* CTA Button at bottom */}
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "center",
+          pb: 6,
+          zIndex: 1,
+        }}
+      >
+        <Button
+          component={Link}
+          href="/signup"
+          variant="contained"
           sx={{
-            position: "absolute",
-            bottom: 40,
-            width: "100%",
-            textAlign: "center",
-            color: "rgba(0,0,0,0.7)",
+            bgcolor: "#16a34a",
+            color: "white",
             fontFamily: "Raleway, sans-serif",
-            px: 2,
+            fontSize: "1rem",
+            px: 5,
+            "&:hover": { bgcolor: "#15803d" },
+            borderRadius: 2,
           }}
         >
-          Take Action Today for a Cleaner Tomorrow.
-        </Typography>
+          Start Your Eco Journey Today
+        </Button>
+      </Box>
       </Container>
     </Box>
   );
