@@ -3,52 +3,51 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { GoogleMap, Marker, useJsApiLoader, InfoWindow } from "@react-google-maps/api"
-import { Card, CardContent, Typography, Box, Button, CardMedia, ToggleButton, ToggleButtonGroup } from "@mui/material"
+import { Card, CardContent, Typography, Box, Button, CardMedia, ToggleButton, ToggleButtonGroup, Switch, FormControlLabel, CircularProgress } from "@mui/material"
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import Navbar from "@/components/Navbar"
 
-// Updated Task type to include a photo
+// Updated Task type to include status
 type Task = {
   id: string
   title: string
   description: string
   location: string // "lat,lng"
   bountyTotal?: number
-  links?: any // Optional photo URL
+  status?: string
+  links?: any
 }
 
 export default function BountiesMap() {
   const [tasks, setTasks] = useState<Task[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
-  // State to store fetched street addresses for tasks
   const [addresses, setAddresses] = useState<Record<string, string>>({})
   const [geocoder, setGeocoder] = useState<google.maps.Geocoder | null>(null)
   const [filter, setFilter] = useState<'all' | 'contributed' | 'volunteering'>('all');
   const [userData, setUserData] = useState<any>(null);
+  const [showMyTasks, setShowMyTasks] = useState(false);
   const router = useRouter()
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries: ["places"],
   })
 
-  // Initialize the geocoder once the Google Maps script is loaded
   useEffect(() => {
-    if (isLoaded) {
-      setGeocoder(new window.google.maps.Geocoder())
-    }
+    if (isLoaded) setGeocoder(new window.google.maps.Geocoder())
   }, [isLoaded])
 
-  // Fetch tasks from the API
   useEffect(() => {
     fetch("/api/task")
-      .then((res) => res.json())
-      .then((data) => {
+      .then(res => res.json())
+      .then(data => {
         setTasks(data)
         setLoading(false)
       })
-      .catch((err) => {
+      .catch(err => {
         console.error("Failed to fetch tasks:", err)
         setLoading(false)
       })
@@ -65,24 +64,20 @@ export default function BountiesMap() {
   // Geocode task locations to get street addresses
   useEffect(() => {
     if (geocoder && tasks.length > 0) {
-      const geocodePromises = tasks.map((task) => {
+      const geocodePromises = tasks.map(task => {
         const [lat, lng] = task.location.split(",").map(Number)
-        return new Promise<[string, string]>((resolve) => {
+        return new Promise<[string, string]>(resolve => {
           geocoder.geocode({ location: { lat, lng } }, (results, status) => {
             if (status === "OK" && results && results[0]) {
-              // Resolve with task ID and the formatted address
               resolve([task.id, results[0].formatted_address])
             } else {
-              // Handle cases where geocoding fails
-              console.log(`Geocode was not successful for the following reason: ${status}`)
               resolve([task.id, "Address not available"])
             }
           })
         })
       })
 
-      // After all geocoding requests are complete, update the addresses state
-      Promise.all(geocodePromises).then((addressResults) => {
+      Promise.all(geocodePromises).then(addressResults => {
         setAddresses(Object.fromEntries(addressResults))
       })
     }
@@ -90,35 +85,61 @@ export default function BountiesMap() {
 
   // Filtering logic
   let filteredTasks = tasks;
-  if (filter === 'all') {
-    filteredTasks = tasks.filter((t) => t.status === 'open');
-  } else if (filter === 'contributed' && userData) {
-    const contributedIds = new Set(userData.contributions?.map((c: any) => c.taskId));
-    filteredTasks = tasks.filter((t) => contributedIds.has(t.id));
-  } else if (filter === 'volunteering' && userData) {
-    const volunteeringIds = new Set(userData.volunteeredTasks?.map((v: any) => v.taskId));
-    filteredTasks = tasks.filter((t) => volunteeringIds.has(t.id));
+  if (showMyTasks) {
+    if (userData) {
+      const myTaskIds = new Set(userData.contributions?.map((c: any) => c.taskId));
+      filteredTasks = tasks.filter((t) => myTaskIds.has(t.id));
+    } else {
+      filteredTasks = []; // No tasks if user data is unavailable
+    }
+  } else {
+    if (filter === "all") {
+      filteredTasks = tasks.filter((t) => t.status === "open");
+    } else if (filter === "contributed" && userData) {
+      const contributedIds = new Set(userData.contributions?.map((c: any) => c.taskId));
+      filteredTasks = tasks.filter((t) => contributedIds.has(t.id));
+    } else if (filter === "volunteering" && userData) {
+      const volunteeringIds = new Set(userData.volunteeredTasks?.map((v: any) => v.taskId));
+      filteredTasks = tasks.filter((t) => volunteeringIds.has(t.id));
+    }
   }
 
-  if (loading || !isLoaded) return <div>Loading map...</div>
-  if (tasks.length === 0) return <div>No tasks found.</div>
+  if (loading || !isLoaded) {
+    return (
+      <div
+        style={{
+          height: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          background: "linear-gradient(135deg, #d8ffb1, #a3ff7c)",
+        }}
+      >
+        <CircularProgress size={60} thickness={4} style={{ marginBottom: "20px" }} />
+        <Typography variant="h5" style={{ fontWeight: "bold", color: "#2f6d23" }}>
+          Loading Map...
+        </Typography>
+        <Typography variant="body2" style={{ color: "#2f6d23", marginTop: "8px" }}>
+          Please wait while we prepare your bounties
+        </Typography>
+      </div>
+    );
+  }
+    if (tasks.length === 0) return <div>No tasks found.</div>
 
   const firstLocation = tasks[0].location.split(",").map(Number)
   const center = { lat: firstLocation[0], lng: firstLocation[1] }
+  const mapContainerStyle = { width: "100%", height: "100%" }
 
-  const mapContainerStyle = {
-    width: "100%",
-    height: "100%",
+  const getMarkerColor = (status: string) => {
+    switch (status) {
+      case "in_progress": return "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+      case "in_review": return "http://maps.google.com/mapfiles/ms/icons/orange-dot.png"
+      default: return "http://maps.google.com/mapfiles/ms/icons/red-dot.png"
+    }
   }
 
-  // A clean map style to hide unnecessary labels and features
-  const cleanMapStyle = [
-    { featureType: "poi", stylers: [{ visibility: "off" }] },
-    { featureType: "transit", stylers: [{ visibility: "off" }] },
-    { featureType: "administrative", stylers: [{ visibility: "off" }] },
-    { featureType: "landscape", stylers: [{ visibility: "simplified" }] },
-    { featureType: "water", stylers: [{ visibility: "simplified" }] },
-  ]
   const handleAcceptBounty = async (taskId: string) => {
     try {
       const res = await fetch("/api/task/accept", {
@@ -126,37 +147,58 @@ export default function BountiesMap() {
         headers: { "Content-Type": "application/json" },
         credentials: "include",
         body: JSON.stringify({ taskId }),
-      });
-  
-      const data = await res.json();
-  
+      })
+
+      const data = await res.json()
       if (res.ok) {
-        alert("Bounty accepted successfully!");
-        setSelectedTask(null);
-        // Optionally refresh tasks so the status updates
-        const updatedTasks = tasks.map(t =>
-          t.id === taskId ? { ...t, status: "in_progress" } : t
-        );
-        setTasks(updatedTasks);
+        alert("Bounty accepted successfully!")
+        setSelectedTask(null)
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, status: "in_progress" } : t))
       } else {
-        alert(data.error || "Failed to accept bounty.");
+        alert(data.error || "Failed to accept bounty.")
       }
     } catch (err) {
-      console.error(err);
-      alert("Error accepting bounty.");
+      console.error(err)
+      alert("Error accepting bounty.")
     }
-  };
-  
+  }
+
+  const handleSubmitProof = async (e: React.FormEvent<HTMLFormElement>, taskId: string) => {
+    e.preventDefault()
+    const formData = new FormData(e.currentTarget)
+    const file = formData.get("file")
+
+    if (!file || !(file instanceof File)) return alert("Please select a file")
+
+    try {
+      const uploadData = new FormData()
+      uploadData.append("taskId", taskId)
+      uploadData.append("file", file)
+
+      const res = await fetch("/api/task/submit", {
+        method: "POST",
+        body: uploadData,
+        credentials: "include",
+      })
+
+      const data = await res.json()
+      if (res.ok) {
+        alert("Proof submitted successfully!")
+        setSelectedTask(null)
+        setTasks(tasks.map(t => t.id === taskId ? { ...t, status: "in_review" } : t))
+      } else {
+        alert(data.error || "Failed to submit proof.")
+      }
+    } catch (err) {
+      console.error(err)
+      alert("Error submitting proof.")
+    }
+  }
+
   return (
     <>
       <Navbar />
-      <div
-        style={{
-          display: "flex",
-          height: "calc(100vh - 64px)", // Full height minus navbar
-        }}
-      >
-        {/* Map Section (70%) */}
+      <div style={{ display: "flex", height: "calc(100vh - 64px)" }}>
         <div style={{ width: "70%", height: "100%" }}>
           <GoogleMap
             mapContainerStyle={mapContainerStyle}
@@ -202,50 +244,109 @@ export default function BountiesMap() {
                 <Marker
                   key={task.id}
                   position={{ lat, lng }}
+                  icon={{ url: getMarkerColor(task.status || "open") }}
                   onClick={() => setSelectedTask(task)}
                 />
               )
             })}
 
-            {/* Show an InfoWindow when a task is selected */}
             {selectedTask && (
-  <InfoWindow
-    position={{
-      lat: Number(selectedTask.location.split(",")[0]),
-      lng: Number(selectedTask.location.split(",")[1]),
-    }}
-    onCloseClick={() => setSelectedTask(null)}
-    options={{ maxWidth: 300 }}
-  >
-    <div style={{ padding: "15px", maxWidth: "300px", fontFamily: "Arial, sans-serif" }}>
-      <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
-        {selectedTask.title}
-      </Typography>
-      <Typography variant="body2" sx={{ mb: 1 }}>
-        {selectedTask.description}
-      </Typography>
-      {selectedTask.bountyTotal ? (
-        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          Total: {selectedTask.bountyTotal} credits
-        </Typography>
-      ):<></>}
+              <InfoWindow
+                position={{
+                  lat: Number(selectedTask.location.split(",")[0]),
+                  lng: Number(selectedTask.location.split(",")[1]),
+                }}
+                onCloseClick={() => setSelectedTask(null)}
+                options={{ maxWidth: 300 }}
+              >
+                <div style={{ padding: "15px", maxWidth: "300px" }}>
+                  <Typography variant="h6" fontWeight="bold">{selectedTask.title}</Typography>
+                  <Typography variant="body2">{selectedTask.description}</Typography>
+                  {selectedTask?.bountyTotal ? (
+                    <Typography variant="body2" color="text.secondary">Total: {selectedTask.bountyTotal} credits</Typography>
+                  ):<></>}
 
+                  {selectedTask.status === "open" && (
+                    <Button
+                      variant="contained"
+                      sx={{ backgroundColor: "#22c55e", "&:hover": { backgroundColor: "#16a34a" }, width: "100%" }}
+                      onClick={() => handleAcceptBounty(selectedTask.id)}
+                    >
+                      Accept Bounty
+                    </Button>
+                  )}
+
+{selectedTask.status === "in_progress" && (
+  <form
+    onSubmit={(e) => handleSubmitProof(e, selectedTask.id)}
+    style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "10px" }}
+  >
+    {/* Hidden file input */}
+    <input
+      id="proof-upload"
+      type="file"
+      accept="image/*"
+      style={{ display: "none" }}
+      onChange={(e) => {
+        const file = e.target.files?.[0];
+        if (file) setSelectedFile(file);
+      }}
+    />
+
+    {/* Upload Button */}
+    <label htmlFor="proof-upload">
       <Button
         variant="contained"
+        component="span"
+        startIcon={<UploadFileIcon />}
         sx={{
-          backgroundColor: "#22c55e",
-          "&:hover": { backgroundColor: "#16a34a" },
+          backgroundColor: "#f57c00",
+          "&:hover": { backgroundColor: "#ef6c00" },
           fontWeight: "bold",
-          width: "100%",
+          borderRadius: "8px",
         }}
-        onClick={() => handleAcceptBounty(selectedTask.id)}
       >
-        Accept Bounty
+        Upload Photo Proof
       </Button>
-    </div>
-  </InfoWindow>
+    </label>
+
+    {/* Show selected file name */}
+    {selectedFile && (
+      <Typography variant="body2" sx={{ fontStyle: "italic", fontSize: "0.85rem" }}>
+         {selectedFile.name}
+      </Typography>
+    )}
+
+    {/* Helper text */}
+    {!selectedFile && (
+      <Typography variant="caption" sx={{ color: "red", fontStyle: "italic" }}>
+        Please upload a photo to submit proof
+      </Typography>
+    )}
+
+    {/* Submit Button */}
+    <Button
+      type="submit"
+      variant="contained"
+      sx={{
+        backgroundColor: "#22c55e",
+        "&:hover": { backgroundColor: "#16a34a" },
+        fontWeight: "bold",
+      }}
+      disabled={!selectedFile} // Disable until file is chosen
+    >
+      Submit Proof
+    </Button>
+  </form>
 )}
 
+
+                  {selectedTask.status === "in_review" && (
+                    <Typography variant="body2" color="warning.main">Proof submitted, awaiting review.</Typography>
+                  )}
+                </div>
+              </InfoWindow>
+            )}
           </GoogleMap>
         </div>
 
@@ -288,20 +389,33 @@ export default function BountiesMap() {
               Create a Bounty
             </Button>
           </div>
-          {/* Filter Switch */}
-          <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1 }}>
-            <ToggleButtonGroup
-              value={filter}
-              exclusive
-              onChange={(_, val) => val && setFilter(val)}
-              size="small"
-              color="success"
-            >
-              <ToggleButton value="all">All Open Tasks</ToggleButton>
-              <ToggleButton value="contributed">My Tasks</ToggleButton>
-              <ToggleButton value="volunteering">Volunteering</ToggleButton>
-            </ToggleButtonGroup>
-          </Box>
+
+      
+<div style={{display:'flex', justifyContent: 'space-evenly'}}> {/* Filter Switch */}
+          {!showMyTasks ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1 , backgroundColor:'white'}}>
+              <ToggleButtonGroup
+                value={filter}
+                exclusive
+                onChange={(_, val) => val && setFilter(val)}
+                size="small"
+                color="success"
+              >
+                <ToggleButton disableRipple value="all">All Open Bounties</ToggleButton>
+                <ToggleButton disableRipple value="volunteering">Volunteering</ToggleButton>
+              </ToggleButtonGroup>
+            </Box>
+          ):<Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1, width:'260px' }}>
+          
+        </Box>}
+    {/* My Tasks Switch */}
+    <Box sx={{ display: "flex", justifyContent: "center", mt: 2, mb: 1 }}>
+            <FormControlLabel
+              control={<Switch checked={showMyTasks} onChange={() => setShowMyTasks(!showMyTasks)} />}
+              label="My Bounties"
+            />
+          </Box></div>
+         
           {/* Scrollable Card List */}
           <div
             style={{
@@ -343,16 +457,9 @@ export default function BountiesMap() {
                     />
                   )}
                   <CardContent>
-                    <Typography variant="subtitle1" fontWeight={600}>
-                      {task.title}
-                    </Typography>
-                    {/* Display the fetched street address */}
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                      {addresses[task.id] || "Loading address..."}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary" noWrap>
-                      {task.description}
-                    </Typography>
+                    <Typography variant="subtitle1" fontWeight={600}>{task.title}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>{addresses[task.id] || "Loading address..."}</Typography>
+                    <Typography variant="body2" color="text.secondary" noWrap>{task.description}</Typography>
                   </CardContent>
                 </Card>
               ))}
