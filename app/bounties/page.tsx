@@ -97,7 +97,34 @@ export default function BountiesMap() {
     { featureType: "landscape", stylers: [{ visibility: "simplified" }] },
     { featureType: "water", stylers: [{ visibility: "simplified" }] },
   ]
-
+  const handleAcceptBounty = async (taskId: string) => {
+    try {
+      const res = await fetch("/api/task/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ taskId }),
+      });
+  
+      const data = await res.json();
+  
+      if (res.ok) {
+        alert("Bounty accepted successfully!");
+        setSelectedTask(null);
+        // Optionally refresh tasks so the status updates
+        const updatedTasks = tasks.map(t =>
+          t.id === taskId ? { ...t, status: "in_progress" } : t
+        );
+        setTasks(updatedTasks);
+      } else {
+        alert(data.error || "Failed to accept bounty.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error accepting bounty.");
+    }
+  };
+  
   return (
     <>
       <Navbar />
@@ -160,30 +187,43 @@ export default function BountiesMap() {
 
             {/* Show an InfoWindow when a task is selected */}
             {selectedTask && (
-              <InfoWindow
-                position={{
-                  lat: Number(selectedTask.location.split(",")[0]),
-                  lng: Number(selectedTask.location.split(",")[1]),
-                }}
-                onCloseClick={() => setSelectedTask(null)}
-              >
-                {/* InfoWindow content */}
-                <div style={{ padding: '10px', maxWidth: '250px' }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <Typography variant="subtitle1" fontWeight="bold" component="h3">
-                            {selectedTask.title}
-                        </Typography>
-                        {/* The close button is part of the InfoWindow component */}
-                   </div>
-                  <Typography variant="body2" sx={{ mb: 1 }}>{selectedTask.description}</Typography>
-                  {selectedTask.bountyTotal && (
-                    <Typography variant="body2" color="text.secondary">
-                      Total: {selectedTask.bountyTotal} credits
-                    </Typography>
-                  )}
-                </div>
-              </InfoWindow>
-            )}
+  <InfoWindow
+    position={{
+      lat: Number(selectedTask.location.split(",")[0]),
+      lng: Number(selectedTask.location.split(",")[1]),
+    }}
+    onCloseClick={() => setSelectedTask(null)}
+    options={{ maxWidth: 300 }}
+  >
+    <div style={{ padding: "15px", maxWidth: "300px", fontFamily: "Arial, sans-serif" }}>
+      <Typography variant="h6" fontWeight="bold" sx={{ mb: 1 }}>
+        {selectedTask.title}
+      </Typography>
+      <Typography variant="body2" sx={{ mb: 1 }}>
+        {selectedTask.description}
+      </Typography>
+      {selectedTask.bountyTotal ? (
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Total: {selectedTask.bountyTotal} credits
+        </Typography>
+      ):<></>}
+
+      <Button
+        variant="contained"
+        sx={{
+          backgroundColor: "#22c55e",
+          "&:hover": { backgroundColor: "#16a34a" },
+          fontWeight: "bold",
+          width: "100%",
+        }}
+        onClick={() => handleAcceptBounty(selectedTask.id)}
+      >
+        Accept Bounty
+      </Button>
+    </div>
+  </InfoWindow>
+)}
+
           </GoogleMap>
         </div>
 
@@ -258,7 +298,7 @@ export default function BountiesMap() {
              >
              
                   {/* Display photo if available */}
-                  {task.links && (
+                  {task.links[0] && (
                     <CardMedia
                     style={{padding: '10px'}}
                       component="img"
