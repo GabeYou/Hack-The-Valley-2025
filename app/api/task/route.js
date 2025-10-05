@@ -192,6 +192,7 @@ export async function GET() {
         description: true,
         location: true,
         bountyTotal: true,
+        status: true,
         contributions: {
           select: {
             id: true,

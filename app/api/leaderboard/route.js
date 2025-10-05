@@ -16,7 +16,7 @@ export async function GET() {
     const completedUserIds = completedGroups.map((g) => g.userId);
     const completedUsers = await prisma.user.findMany({
       where: { id: { in: completedUserIds } },
-      select: { id: true, name: true, email: true, reputation: true, walletBalance: true },
+      select: { id: true, name: true, email: true, reputation: true },
     });
     const completedUserMap = new Map(completedUsers.map((u) => [u.id, u]));
 
