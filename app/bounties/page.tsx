@@ -32,6 +32,7 @@ export default function BountiesMap() {
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [proofModal, setProofModal] = useState<{ open: boolean; imgUrl: string | null; taskId: string | null }>({ open: false, imgUrl: null, taskId: null });
+  const [imageLoaded, setImageLoaded] = useState(false);
 
 
   const { isLoaded } = useJsApiLoader({
@@ -331,6 +332,7 @@ export default function BountiesMap() {
                     <>
                       {selectedTask.status === 'in_review' && (
                         <Button
+                        disableRipple
                           variant="contained"
                           color="secondary"
                           sx={{ mt: 2, width: '100%' }}
@@ -379,6 +381,8 @@ export default function BountiesMap() {
                           {/* Upload Button */}
                           <label htmlFor="proof-upload">
                             <Button
+                            disableRipple
+                            disableTouchRipple
                               variant="contained"
                               component="span"
                               startIcon={<UploadFileIcon />}
@@ -409,6 +413,8 @@ export default function BountiesMap() {
 
                           {/* Submit Button */}
                           <Button
+                          disableRipple
+                          disableTouchRipple
                             type="submit"
                             variant="contained"
                             sx={{
@@ -465,6 +471,8 @@ export default function BountiesMap() {
               Available Bounties
             </Typography>
             <Button
+            disableRipple
+            disableTouchRipple
               sx={{backgroundColor:'#2f6d23'}}
               variant="contained"
               color="primary"
@@ -484,8 +492,9 @@ export default function BountiesMap() {
   }}
 > {/* Filter Switch */}
           {!showMyTasks ? (
-            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1 , backgroundColor:'white'}}>
+            <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1 , backgroundColor:'white',border:'2px solid #2f6d23', borderRadius:'5px'}}>
               <ToggleButtonGroup
+          
                 value={filter}
                 exclusive
                 onChange={(_, val) => {
@@ -497,11 +506,11 @@ export default function BountiesMap() {
                 size="small"
                 color="success"
               >
-                <ToggleButton disableRipple value="all">All Open Bounties</ToggleButton>
-                <ToggleButton disableRipple value="volunteering">Volunteering</ToggleButton>
+                <ToggleButton disableRipple value="all"> Available </ToggleButton>
+                <ToggleButton disableRipple value="volunteering">Accepted </ToggleButton>
               </ToggleButtonGroup>
             </Box>
-          ):<Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1, width:'260px' }}>
+          ):<Box sx={{ display: 'flex', justifyContent: 'center', mt: 2, mb: 1, width:'168px' }}>
           
         </Box>}
     {/* My Tasks Switch */}
@@ -518,8 +527,8 @@ export default function BountiesMap() {
           {/* Scrollable Card List */}
           <div
             style={{
-              overflowY: "auto", // Make only this container scrollable
-              flex: 1, // Allow this container to grow and fill available space
+              overflowY: "auto", 
+              flex: 1, 
               padding: "1rem",
             }}
           >
@@ -587,44 +596,109 @@ export default function BountiesMap() {
         </div>
       </div>
       <Modal
-        open={proofModal.open}
-        onClose={() => setProofModal({ open: false, imgUrl: null, taskId: null })}
-        aria-labelledby="proof-modal-title"
-        aria-describedby="proof-modal-description"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      open={proofModal.open}
+      onClose={() => setProofModal({ open: false, imgUrl: null, taskId: null })}
+      aria-labelledby="proof-modal-title"
+      aria-describedby="proof-modal-description"
+      style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+    >
+      <Box
+        sx={{
+          bgcolor: "background.paper",
+          border: "2px solid #000",
+          boxShadow: 24,
+          p: 4,
+          width: "auto",
+          maxWidth: "500px",
+          maxHeight: "90vh",
+          overflow: "auto",
+          borderRadius: "12px",
+        }}
       >
+        <Typography id="proof-modal-title" variant="h6" component="h2" fontWeight="bold">
+          Verification Proof
+        </Typography>
+
+        {/* Image Display Section */}
         <Box
           sx={{
-            bgcolor: 'background.paper',
-            border: '2px solid #000',
-            boxShadow: 24,
-            p: 4,
-            width: 'auto',
-            maxWidth: '500px',
-            maxHeight: '90vh',
-            overflow: 'auto',
+            position: "relative",
+            mt: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: 250,
           }}
         >
-          <Typography id="proof-modal-title" variant="h6" component="h2">
-            Verification Proof
-          </Typography>
-          {proofModal.imgUrl ? (
-            <img src={proofModal.imgUrl} alt="Proof" style={{ width: '100%', marginTop: '16px', borderRadius: '8px' }} />
-          ) : (
-            <Typography id="proof-modal-description" sx={{ mt: 2 }}>
-              Loading image...
-            </Typography>
+          {!imageLoaded && (
+            // 🔄 Animated Loader
+            <Box
+              sx={{
+                height: 250,
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "rgba(0,0,0,0.05)",
+                borderRadius: "8px",
+                animation: "pulse 1.5s infinite",
+                "@keyframes pulse": {
+                  "0%": { opacity: 0.6 },
+                  "50%": { opacity: 1 },
+                  "100%": { opacity: 0.6 },
+                },
+              }}
+            >
+              <CircularProgress color="success" size={36} />
+              <Typography variant="body2" sx={{ ml: 2, color: "text.secondary" }}>
+                Loading proof...
+              </Typography>
+            </Box>
           )}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
-            <Button onClick={() => handleConfirmVerification(proofModal.taskId)} variant="contained" color="success">
-              Confirm
-            </Button>
-            <Button onClick={() => setProofModal({ open: false, imgUrl: null, taskId: null })} variant="contained" color="error">
-              Close
-            </Button>
-          </Box>
+
+          {proofModal.imgUrl && (
+            <img
+              src={proofModal.imgUrl}
+              alt="Proof"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageLoaded(true)} // stop spinner if broken image
+              style={{
+                width: "100%",
+                borderRadius: "8px",
+                marginTop: "8px",
+                opacity: imageLoaded ? 1 : 0,
+                transition: "opacity 0.5s ease-in-out",
+                position: imageLoaded ? "relative" : "absolute",
+              }}
+            />
+          )}
         </Box>
-      </Modal>
+
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3, gap: 1 }}>
+          <Button
+            disableRipple
+            disableTouchRipple
+            onClick={() => handleConfirmVerification(proofModal.taskId)}
+            variant="contained"
+            color="success"
+            sx={{ fontWeight: "bold", flex: 1 }}
+          >
+            Confirm
+          </Button>
+          <Button
+            disableRipple
+            disableTouchRipple
+            onClick={() => setProofModal({ open: false, imgUrl: null, taskId: null })}
+            variant="contained"
+            color="error"
+            sx={{ fontWeight: "bold", flex: 1 }}
+          >
+            Close
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
+
     </>
   )
 }
