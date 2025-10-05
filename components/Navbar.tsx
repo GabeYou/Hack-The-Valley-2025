@@ -13,6 +13,7 @@ export default function Navbar() {
 
   return (
     <AppBar
+      position="sticky"
       elevation={1}
       sx={{ backgroundColor: "white", color: "black" }}
     >
@@ -48,7 +49,6 @@ export default function Navbar() {
             sx={{
               fontWeight: "bold",
               fontSize: "1.5rem",
-              lineHeight: 1.2,
             }}
           >
             EcoBounty

@@ -78,15 +78,23 @@ export default function DashboardPage() {
   const topRowBadges = ["🌱", "💧", "☀️", "🌍", "🌸", "🔥"];
 
   return (
+    <>
+    <Navbar />
     <Box
       sx={{
-        minHeight: "100vh",
-        bgcolor: "linear-gradient(to bottom right, #e0f2f1, #f1f8e9)",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "auto",     
       }}
-    >
-      <Navbar />
-
-      <Box sx={{ p: 4 }}>
+      >
+      <Box
+        sx={{
+          flex: 1,
+          p: 4,
+          bgcolor: "#d8ffb1",
+        }}
+      >
+      {/* Content */}
         <Typography
           variant="h4"
           sx={{ mb: 4, color: "green.900", fontWeight: "bold" }}
@@ -280,5 +288,6 @@ export default function DashboardPage() {
         </Grid>
       </Box>
     </Box>
+    </>
   );
 }
