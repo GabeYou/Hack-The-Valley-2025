@@ -75,3 +75,63 @@ export async function GET(_req, { params }) {
     );
   }
 }
+
+// POST /api/task/verify/[id]
+// Marks the task as completed, marks the volunteer as completed, and transfers bounty to the volunteer
+export async function POST(req, { params }) {
+  try {
+    const { id } = params || {};
+    if (!id || typeof id !== 'string') {
+      return new Response(JSON.stringify({ error: 'Task id is required' }), { status: 400 });
+    }
+    // Parse body (should be JSON, but we only need id from params)
+    // Find the task
+    const task = await prisma.task.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        status: true,
+        bountyTotal: true,
+        volunteers: {
+          select: {
+            id: true,
+            userId: true,
+            completed: true,
+          },
+        },
+      },
+    });
+    if (!task) {
+      return new Response(JSON.stringify({ error: 'Task not found' }), { status: 404 });
+    }
+    if (task.status === 'completed') {
+      return new Response(JSON.stringify({ error: 'Task already completed' }), { status: 400 });
+    }
+    // Only 1 volunteer is assumed
+    const volunteer = task.volunteers[0];
+    if (!volunteer) {
+      return new Response(JSON.stringify({ error: 'No volunteer for this task' }), { status: 400 });
+    }
+    // Transaction: update task, volunteer, and user wallet
+    const updated = await prisma.$transaction([
+      prisma.task.update({
+        where: { id },
+        data: { status: 'completed' },
+      }),
+      prisma.taskVolunteer.update({
+        where: { id: volunteer.id },
+        data: { completed: true },
+      }),
+      prisma.user.update({
+        where: { id: volunteer.userId },
+        data: { walletBalance: { increment: task.bountyTotal } },
+      }),
+    ]);
+    return new Response(JSON.stringify({ success: true }), { status: 200 });
+  } catch (e) {
+    return new Response(
+      JSON.stringify({ error: 'Failed to verify and complete task', details: e?.message }),
+      { status: 500 }
+    );
+  }
+}
