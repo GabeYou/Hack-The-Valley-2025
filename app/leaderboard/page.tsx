@@ -105,7 +105,7 @@ export default function Leaderboard() {
         </Typography>
 
         {/* Sorting Dropdown */}
-        <FormControl sx={{ mb: 3, minWidth: 200 }}>
+        <FormControl sx={{ mb: 3, minWidth: 200, backgroundColor: "white" }}>
           <InputLabel>Sort By</InputLabel>
           <Select
             value={sortBy}
