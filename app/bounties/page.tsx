@@ -32,6 +32,7 @@ export default function BountiesMap() {
   const router = useRouter()
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [proofModal, setProofModal] = useState<{ open: boolean; imgUrl: string | null; taskId: string | null }>({ open: false, imgUrl: null, taskId: null });
+  const [imageLoaded, setImageLoaded] = useState(false);
 
 
   const { isLoaded } = useJsApiLoader({
@@ -508,8 +509,8 @@ export default function BountiesMap() {
           {/* Scrollable Card List */}
           <div
             style={{
-              overflowY: "auto", // Make only this container scrollable
-              flex: 1, // Allow this container to grow and fill available space
+              overflowY: "auto", 
+              flex: 1, 
               padding: "1rem",
             }}
           >
@@ -577,44 +578,109 @@ export default function BountiesMap() {
         </div>
       </div>
       <Modal
-        open={proofModal.open}
-        onClose={() => setProofModal({ open: false, imgUrl: null, taskId: null })}
-        aria-labelledby="proof-modal-title"
-        aria-describedby="proof-modal-description"
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+      open={proofModal.open}
+      onClose={() => setProofModal({ open: false, imgUrl: null, taskId: null })}
+      aria-labelledby="proof-modal-title"
+      aria-describedby="proof-modal-description"
+      style={{ display: "flex", alignItems: "center", justifyContent: "center" }}
+    >
+      <Box
+        sx={{
+          bgcolor: "background.paper",
+          border: "2px solid #000",
+          boxShadow: 24,
+          p: 4,
+          width: "auto",
+          maxWidth: "500px",
+          maxHeight: "90vh",
+          overflow: "auto",
+          borderRadius: "12px",
+        }}
       >
+        <Typography id="proof-modal-title" variant="h6" component="h2" fontWeight="bold">
+          Verification Proof
+        </Typography>
+
+        {/* Image Display Section */}
         <Box
           sx={{
-            bgcolor: 'background.paper',
-            border: '2px solid #000',
-            boxShadow: 24,
-            p: 4,
-            width: 'auto',
-            maxWidth: '500px',
-            maxHeight: '90vh',
-            overflow: 'auto',
+            position: "relative",
+            mt: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            minHeight: 250,
           }}
         >
-          <Typography id="proof-modal-title" variant="h6" component="h2">
-            Verification Proof
-          </Typography>
-          {proofModal.imgUrl ? (
-            <img src={proofModal.imgUrl} alt="Proof" style={{ width: '100%', marginTop: '16px', borderRadius: '8px' }} />
-          ) : (
-            <Typography id="proof-modal-description" sx={{ mt: 2 }}>
-              Loading image...
-            </Typography>
+          {!imageLoaded && (
+            // 🔄 Animated Loader
+            <Box
+              sx={{
+                height: 250,
+                width: "100%",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                background: "rgba(0,0,0,0.05)",
+                borderRadius: "8px",
+                animation: "pulse 1.5s infinite",
+                "@keyframes pulse": {
+                  "0%": { opacity: 0.6 },
+                  "50%": { opacity: 1 },
+                  "100%": { opacity: 0.6 },
+                },
+              }}
+            >
+              <CircularProgress color="success" size={36} />
+              <Typography variant="body2" sx={{ ml: 2, color: "text.secondary" }}>
+                Loading proof...
+              </Typography>
+            </Box>
           )}
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 2, gap: 1 }}>
-            <Button disableRipple disableTouchRipple onClick={() => handleConfirmVerification(proofModal.taskId)} variant="contained" color="success">
-              Confirm
-            </Button>
-            <Button disableRipple disableTouchRipple onClick={() => setProofModal({ open: false, imgUrl: null, taskId: null })} variant="contained" color="error">
-              Close
-            </Button>
-          </Box>
+
+          {proofModal.imgUrl && (
+            <img
+              src={proofModal.imgUrl}
+              alt="Proof"
+              onLoad={() => setImageLoaded(true)}
+              onError={() => setImageLoaded(true)} // stop spinner if broken image
+              style={{
+                width: "100%",
+                borderRadius: "8px",
+                marginTop: "8px",
+                opacity: imageLoaded ? 1 : 0,
+                transition: "opacity 0.5s ease-in-out",
+                position: imageLoaded ? "relative" : "absolute",
+              }}
+            />
+          )}
         </Box>
-      </Modal>
+
+        <Box sx={{ display: "flex", justifyContent: "space-between", mt: 3, gap: 1 }}>
+          <Button
+            disableRipple
+            disableTouchRipple
+            onClick={() => handleConfirmVerification(proofModal.taskId)}
+            variant="contained"
+            color="success"
+            sx={{ fontWeight: "bold", flex: 1 }}
+          >
+            Confirm
+          </Button>
+          <Button
+            disableRipple
+            disableTouchRipple
+            onClick={() => setProofModal({ open: false, imgUrl: null, taskId: null })}
+            variant="contained"
+            color="error"
+            sx={{ fontWeight: "bold", flex: 1 }}
+          >
+            Close
+          </Button>
+        </Box>
+      </Box>
+    </Modal>
+
     </>
   )
 }
