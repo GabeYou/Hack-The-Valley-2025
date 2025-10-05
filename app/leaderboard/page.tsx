@@ -1,6 +1,6 @@
-'use client'
+"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import {
   Box,
@@ -17,62 +17,70 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
+  CircularProgress,
 } from "@mui/material";
 
-// Mock leaderboard data
-const mockEntries = [
-  {
-    id: 1,
-    name: "Alice",
-    avatar: "/placeholder-profile.jpg",
-    bountiesCompleted: 10,
-    moneyEarned: 100,
-    peopleHelped: 10,
-    points: 100,
-  },
-  {
-    id: 2,
-    name: "Bob",
-    avatar: "/placeholder-profile.jpg",
-    bountiesCompleted: 20,
-    moneyEarned: 300,
-    peopleHelped: 6,
-    points: 90,
-  },
-  {
-    id: 3,
-    name: "Charlie",
-    avatar: "/placeholder-profile.jpg",
-    bountiesCompleted: 15,
-    moneyEarned: 600,
-    peopleHelped: 10,
-    points: 150,
-  },
-  {
-    id: 4,
-    name: "David",
-    avatar: "/placeholder-profile.jpg",
-    bountiesCompleted: 5,
-    moneyEarned: 200,
-    peopleHelped: 4,
-    points: 70,
-  },
-];
-
 export default function Leaderboard() {
-  const [sortBy, setSortBy] = useState<"points" | "bounties" | "money" | "helped">("points");
+  const [sortBy, setSortBy] = useState<"bounties" | "money">("bounties");
+  const [entries, setEntries] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // Sort entries based on selected metric
-  const sortedEntries = [...mockEntries].sort((a, b) => {
+  useEffect(() => {
+    async function fetchLeaderboard() {
+      try {
+        const res = await fetch("/api/leaderboard");
+        const data = await res.json();
+
+        // Transform API response into table-friendly format
+        const fromCompleted = data.topCompleted.map((entry: any) => ({
+          id: entry.user.id,
+          name: entry.user.name || "Anonymous",
+          avatar: "/placeholder-profile.jpg",
+          bountiesCompleted: entry.completedCount,
+          moneyEarned: 0,
+        }));
+
+        const fromEarned = data.topEarned.map((entry: any) => ({
+          id: entry.user.id,
+          name: entry.user.name || "Anonymous",
+          avatar: "/placeholder-profile.jpg",
+          bountiesCompleted: 0,
+          moneyEarned: entry.totalEarned,
+        }));
+
+        // Merge users from both leaderboards
+        const mergedMap = new Map<string, any>();
+        [...fromCompleted, ...fromEarned].forEach((e) => {
+          if (!mergedMap.has(e.id)) {
+            mergedMap.set(e.id, e);
+          } else {
+            const prev = mergedMap.get(e.id);
+            mergedMap.set(e.id, {
+              ...prev,
+              bountiesCompleted: prev.bountiesCompleted + e.bountiesCompleted,
+              moneyEarned: prev.moneyEarned + e.moneyEarned,
+            });
+          }
+        });
+
+        setEntries(Array.from(mergedMap.values()));
+      } catch (err) {
+        console.error("Failed to load leaderboard", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchLeaderboard();
+  }, []);
+
+  // Sort entries
+  const sortedEntries = [...entries].sort((a, b) => {
     switch (sortBy) {
-      case "points":
-        return b.points - a.points;
       case "bounties":
         return b.bountiesCompleted - a.bountiesCompleted;
       case "money":
         return b.moneyEarned - a.moneyEarned;
-      case "helped":
-        return b.peopleHelped - a.peopleHelped;
       default:
         return 0;
     }
@@ -86,7 +94,7 @@ export default function Leaderboard() {
         sx={{
           maxWidth: "900px",
           mx: "auto",
-          mt: "64px", // push down below navbar
+          mt: "64px",
           px: 2,
           mb: 8,
         }}
@@ -112,58 +120,58 @@ export default function Leaderboard() {
             label="Sort By"
             onChange={(e) => setSortBy(e.target.value as any)}
           >
-            <MenuItem value="points">Points</MenuItem>
             <MenuItem value="bounties">Bounties Completed</MenuItem>
             <MenuItem value="money">Money Earned</MenuItem>
-            <MenuItem value="helped">People Helped</MenuItem>
           </Select>
         </FormControl>
 
-        <TableContainer
-          component={Paper}
-          sx={{
-            borderRadius: 3,
-            overflow: "hidden",
-            boxShadow: 5,
-          }}
-        >
-          <Table>
-            <TableHead>
-              <TableRow sx={{ backgroundColor: "#d8ffb1" }}>
-                <TableCell sx={{ fontWeight: "bold" }}>#</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>User</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Points</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Bounties Completed</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>Money Earned</TableCell>
-                <TableCell sx={{ fontWeight: "bold" }}>People Helped</TableCell>
-              </TableRow>
-            </TableHead>
-
-            <TableBody>
-              {sortedEntries.map((entry, index) => (
-                <TableRow
-                  key={entry.id}
-                  hover
-                  sx={{
-                    backgroundColor: index % 2 === 0 ? "#f0fff0" : "white",
-                    transition: "0.3s",
-                    "&:hover": { backgroundColor: "#d8ffb1" },
-                  }}
-                >
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                    <Avatar src={entry.avatar} sx={{ width: 32, height: 32 }} />
-                    <Typography>{entry.name}</Typography>
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold" }}>{entry.points}</TableCell>
-                  <TableCell>{entry.bountiesCompleted}</TableCell>
-                  <TableCell>${entry.moneyEarned}</TableCell>
-                  <TableCell>{entry.peopleHelped}</TableCell>
+        {loading ? (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 5 }}>
+            <CircularProgress />
+          </Box>
+        ) : (
+          <TableContainer
+            component={Paper}
+            sx={{
+              borderRadius: 3,
+              overflow: "hidden",
+              boxShadow: 5,
+            }}
+          >
+            <Table>
+              <TableHead>
+                <TableRow sx={{ backgroundColor: "#d8ffb1" }}>
+                  <TableCell sx={{ fontWeight: "bold" }}>#</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>User</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Bounties Completed</TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>Money Earned</TableCell>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+              </TableHead>
+
+              <TableBody>
+                {sortedEntries.map((entry, index) => (
+                  <TableRow
+                    key={entry.id}
+                    hover
+                    sx={{
+                      backgroundColor: index % 2 === 0 ? "#f0fff0" : "white",
+                      transition: "0.3s",
+                      "&:hover": { backgroundColor: "#d8ffb1" },
+                    }}
+                  >
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Avatar src={entry.avatar} sx={{ width: 32, height: 32 }} />
+                      <Typography>{entry.name}</Typography>
+                    </TableCell>
+                    <TableCell>{entry.bountiesCompleted}</TableCell>
+                    <TableCell>${entry.moneyEarned}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
     </div>
   );
