@@ -64,7 +64,7 @@ export async function GET(req) {
   try {
     const { userId } = jwt.verify(token, JWT_SECRET);
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    return new Response(JSON.stringify({ "name": user.name, "email": user.email, "address": user.address, "phoneNumber": user.phoneNumber }));
+    return new Response(JSON.stringify({ "name": user.name, "email": user.email, "address": user.address, "phoneNumber": user.phoneNumber }), {status: 200});
   } catch {
     return new Response(JSON.stringify({ error: 'Invalid token' }), { status: 401 });
   }
