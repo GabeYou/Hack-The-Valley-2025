@@ -19,6 +19,9 @@ import { BarChart } from '@mui/x-charts/BarChart';
 export default function DashboardPage() {
 
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
+  const [bountiesCompleted, setBountiesCompleted] = useState<number | null>(null);
+  const [topBountyHunter, setTopBountyHunter] = useState<string>("Loading...");
+  const [totalEarned, setTotalEarned] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,7 +46,62 @@ export default function DashboardPage() {
       }
     }
 
+    async function fetchBountiesCompleted() {
+      try {
+        const res = await fetch("/api/completedBounties", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error("Failed to fetch completed bounties");
+        }
+        const data = await res.json();
+        setBountiesCompleted(data.completedBounties);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
+
+    async function fetchTopBountyHunter() {
+      try {
+        const res = await fetch("/api/leaderboard", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error("Failed to fetch leaderboard");
+        }
+        const data = await res.json();
+        if (data.topCompleted && data.topCompleted.length > 0 && data.topCompleted[0].user && data.topCompleted[0].user.name) {
+          setTopBountyHunter(data.topCompleted[0].user.name);
+        } else {
+          setTopBountyHunter("N/A");
+        }
+      } catch (err: any) {
+        setTopBountyHunter("N/A");
+      }
+    }
+
+    async function fetchTotalEarned() {
+      try {
+        const res = await fetch("/api/completedVolunteeredTasks", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error("Failed to fetch total earned");
+        }
+        const data = await res.json();
+        setTotalEarned(data.totalEarned?.toString() ?? "0");
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
+
     fetchWallet();
+    fetchBountiesCompleted();
+    fetchTopBountyHunter();
+    fetchTotalEarned();
   }, []);
 
   // Second row stats
@@ -62,7 +120,7 @@ export default function DashboardPage() {
     },
     {
       label: "Bounties Completed",
-      value: "18",
+      value: bountiesCompleted !== null ? `${bountiesCompleted}` : "Loading...",
       gradient: "linear-gradient(135deg, #ffaaa5, #ff8b94)",
       icon: <CheckCircleIcon sx={{ fontSize: 40, color: "#2e7d32", mb: 1 }} />, // green
     },
@@ -152,7 +210,9 @@ export default function DashboardPage() {
               <Typography variant="h6" sx={{ mb: 1, fontWeight: 500, color: "green.900" }}>
                 EcoBounty Money Claimed
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold", color: "green.800" }}>$1,200</Typography>
+              <Typography variant="h4" sx={{ fontWeight: "bold", color: "green.800" }}>
+                {totalEarned !== null ? `$${totalEarned}` : "Loading..."}
+              </Typography>
             </Paper>
           </Grid>
 
@@ -178,7 +238,7 @@ export default function DashboardPage() {
               <Typography variant="h6" sx={{ mb: 1, fontWeight: 500, color: "green.900" }}>
                 Top Bounty Hunter
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold", color: "green.800" }}>Alex</Typography>
+              <Typography variant="h4" sx={{ fontWeight: "bold", color: "green.800" }}>{topBountyHunter}</Typography>
             </Paper>
           </Grid>
 
