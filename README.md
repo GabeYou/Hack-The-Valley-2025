@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EcoBounty
+Empowering People to Take Action for a Better Tomorrow
 
-## Getting Started
+<img src="/public/Forest-bro.svg" width="400" height="400">
 
-First, run the development server:
+## Inspiration
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+We were inspired by Earth Day events, where students often participate in walks to clean up trash from roads and parks. We wanted to capture the same spirit of community action and make it easier for anyone to contribute to local good causes while also creating rewards & incentives.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## What it does
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+EcoBounty is a platform where people can crowd-fund community-based tasks. Think of it as a GoFundMe, but specifically for actionable, local projects that make a positive impact. Users can create campaigns for initiatives such as:
+- Cleaning up trash in parks or streets
+- Planting trees or community gardens
+- Helping find missing pets
 
-## Learn More
+## How we built it
 
-To learn more about Next.js, take a look at the following resources:
+We built EcoBounty using React, Material-UI and TailwindCSS for the front-end. We used Node.js and Prisma ORM for database management and Supabase for PostgreSQL database hosting. We also used a JWT-based system to authenticate user requests.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Challenges we ran into
 
-## Deploy on Vercel
+Initially, we started building the UI with TailwindCSS and developed some components and pages. However, we later realized that Material UI (MUI) would be easier to use. This meant we had to remake some components and pages in MUI, which was time-consuming.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+[other stuff]
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Accomplishments that we're proud of
+
+Front Page Design
+
+[other stuff]
+
+## What we learned
+
+
+
+## What's next for EcoBounty
+
+Notifications, Chatting, Progress Bars & Exp levels with unlockables to customize profiles, image uploads?
