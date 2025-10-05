@@ -53,24 +53,25 @@ export default function BountiesMap() {
         setTasks(data);
       })
       .catch(err => {
-        console.error("Failed to fetch tasks:", err);
+        console.error("Failed to fetch tasks:", err)
       })
       .finally(() => {
         if (withSpinner) setLoading(false);
       });
   };
 
-  useEffect(() => {
-    fetchTasks({ withSpinner: true }); // Initial fetch shows spinner
-  }, []);
-
-  // Fetch user data for contributions and volunteered tasks
-  useEffect(() => {
+  const fetchUser = () => {
     fetch("/api/auth/me", { credentials: "include" })
       .then((res) => res.json())
       .then((data) => setUserData(data))
       .catch((err) => console.error("Failed to fetch user data:", err));
-  }, []);
+  };
+
+  // Initial load with spinner
+  useEffect(() => {
+    fetchTasks({ withSpinner: true });
+    fetchUser();
+  }, [])
 
   // Geocode task locations to get street addresses
   useEffect(() => {
@@ -211,6 +212,7 @@ export default function BountiesMap() {
         alert("Bounty accepted successfully!")
         setSelectedTask(null)
         setTasks(tasks.map(t => t.id === taskId ? { ...t, status: "in_progress" } : t))
+        fetchUser(); // refresh volunteeredTasks for Accepted filter
       } else {
         alert(data.error || "Failed to accept bounty.")
       }
@@ -500,7 +502,8 @@ export default function BountiesMap() {
                 onChange={(_, val) => {
                   if (val) {
                     setFilter(val);
-                    fetchTasks(); // silent refresh, no spinner
+                    fetchTasks(); // silent refresh (no spinner)
+                    fetchUser();  // ensure volunteered/contributions are fresh for filters
                   }
                 }}
                 size="small"
@@ -518,7 +521,8 @@ export default function BountiesMap() {
             <FormControlLabel
               control={<Switch checked={showMyTasks} onChange={() => {
                 setShowMyTasks(!showMyTasks);
-                fetchTasks(); // silent refresh, no spinner
+                fetchTasks(); // silent refresh (no spinner)
+                fetchUser();  // refresh user context
               }} />}
               label="My Bounties"
             />
