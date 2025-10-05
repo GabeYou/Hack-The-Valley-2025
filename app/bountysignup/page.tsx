@@ -1,150 +1,304 @@
 'use client'
 
-import { GoogleMap, Marker, useJsApiLoader } from "@react-google-maps/api"
-import { TextField, Button, Typography, Paper } from "@mui/material"
-import { useState } from "react"
+import { GoogleMap, Marker, useJsApiLoader } from '@react-google-maps/api'
+import {
+  TextField,
+  Button,
+  Typography,
+  Paper,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+} from '@mui/material'
+import { useEffect, useState } from 'react'
 
 export default function CreateBountyPage() {
   const { isLoaded } = useJsApiLoader({
-    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '',
   })
 
-  // Default map center (Toronto in this case)
-  const [mapCenter, setMapCenter] = useState<{ lat: number; lng: number }>({
-    lat: 43.6532,
-    lng: -79.3832,
-  })
-
+  const [mapCenter, setMapCenter] = useState({ lat: 43.6532, lng: -79.3832 })
   const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(null)
-  const [form, setForm] = useState({
-    title: "",
-    description: "",
-    bountyTotal: "",
-  })
-  const [message, setMessage] = useState("")
+  const [tasks, setTasks] = useState<any[]>([])
+  const [selectedTask, setSelectedTask] = useState<any | null>(null)
+  const [amountToAdd, setAmountToAdd] = useState('')
+  const [address, setAddress] = useState('')
+  const [form, setForm] = useState({ title: '', description: '', bountyTotal: '' })
+  const [loading, setLoading] = useState(false)
+  const [message, setMessage] = useState('')
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!marker) {
-      setMessage("Please select a location on the map.")
-      return
-    }
-
+  const fetchTasks = async () => {
     try {
-      const res = await fetch("/api/task", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include", // include JWT cookie
+      const res = await fetch(`/api/task`)
+      const data = await res.json()
+      setTasks(data)
+    } catch (err) {
+      console.error('Failed to fetch tasks:', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchTasks()
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude }
+          setMapCenter(loc)
+          setMarker(loc)
+          fetchAddress(loc.lat, loc.lng)
+        },
+        () => {},
+        { enableHighAccuracy: true }
+      )
+    }
+  }, [])
+
+  const fetchAddress = async (lat: number, lng: number) => {
+    try {
+      const res = await fetch(
+        `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}`
+      )
+      const data = await res.json()
+      setAddress(data.results?.[0]?.formatted_address || 'Unknown location')
+    } catch {
+      setAddress('Failed to fetch address')
+    }
+  }
+
+  const handleCreate = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!marker) return setMessage('Please select a location.')
+
+    setLoading(true)
+    try {
+      const res = await fetch(`/api/task`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
-          title: form.title,
-          description: form.description,
+          title: form.title.trim(),
+          description: form.description.trim(),
           lat: marker.lat,
           lon: marker.lng,
           bountyTotal: Number(form.bountyTotal),
         }),
       })
-
+      const data = await res.json()
       if (res.ok) {
-        setMessage("Bounty created successfully! 🎉")
-        setForm({ title: "", description: "", bountyTotal: "" })
+        setMessage(`✅ Task created: ${data.task.title}`)
+        setForm({ title: '', description: '', bountyTotal: '' })
         setMarker(null)
+        fetchTasks()
       } else {
-        const err = await res.json()
-        setMessage(err.error || "Failed to create bounty.")
+        setMessage(data.error || 'Failed to create task.')
       }
     } catch (err) {
       console.error(err)
-      setMessage("Error creating bounty.")
+      setMessage('Error creating task.')
+    } finally {
+      setLoading(false)
     }
   }
 
-  if (!isLoaded) return <div>Loading map...</div>
+  const handleAddFunds = async () => {
+    if (!selectedTask) return
+    try {
+      const res = await fetch(`/api/task`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          taskId: selectedTask.id,
+          amount: Number(amountToAdd),
+        }),
+      })
+      if (res.ok) {
+        setMessage(`✅ Added ${amountToAdd} credits to "${selectedTask.title}"`)
+        setSelectedTask(null)
+        setAmountToAdd('')
+        fetchTasks()
+      } else {
+        setMessage('Failed to add contribution.')
+      }
+    } catch (err) {
+      console.error(err)
+      setMessage('Error adding contribution.')
+    }
+  }
+
+  if (!isLoaded)
+    return <CircularProgress sx={{ margin: '2rem auto', display: 'block' }} />
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
-      {/* Map Half */}
+    <div style={{ display: 'flex', height: '100vh', background: '#f5f5f5' }}>
+      {/* 🌍 Map */}
       <div style={{ flex: 1 }}>
         <GoogleMap
-          mapContainerStyle={{ width: "100%", height: "100%" }}
-          zoom={12}
-          center={mapCenter} // <-- controlled by state
+          mapContainerStyle={{ width: '100%', height: '100%' }}
+          zoom={13}
+          center={mapCenter}
           onClick={(e) => {
             if (e.latLng) {
               const newMarker = { lat: e.latLng.lat(), lng: e.latLng.lng() }
               setMarker(newMarker)
-              setMapCenter(newMarker) // update map center to where user clicked
+              setMapCenter(newMarker)
+              fetchAddress(newMarker.lat, newMarker.lng)
             }
           }}
           options={{
-            streetViewControl: false,
-            mapTypeControl: false,
-            fullscreenControl: false,
+            disableDefaultUI: true,
+            zoomControl: true,
+            styles: [
+              { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+              { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+              // Keep default map look, just muted labels
+              { elementType: 'labels.text.fill', stylers: [{ color: '#555' }] },
+              { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+            ],
           }}
         >
-          {marker && <Marker position={marker} />}
+          {/* Existing Tasks */}
+          {tasks.map((t) => {
+            const [lat, lng] = t.location.split(',').map(Number)
+            return (
+              <Marker
+                key={t.id}
+                position={{ lat, lng }}
+                onClick={() => setSelectedTask(t)}
+                icon={{
+                  url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png',
+                }}
+              />
+            )
+          })}
+
+          {/* Selected Marker */}
+          {marker && (
+            <Marker
+              position={marker}
+              icon={{
+                url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png',
+              }}
+            />
+          )}
         </GoogleMap>
       </div>
 
-      {/* Form Half */}
+      {/* 🧾 Form */}
       <div
         style={{
           flex: 1,
-          padding: "2rem",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
+          padding: '2rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          background: '#fafafa',
         }}
       >
-        <Paper elevation={3} style={{ padding: "2rem" }}>
-          <Typography variant="h5">Create a New Bounty</Typography>
-          <form
-            onSubmit={handleSubmit}
-            style={{ display: "flex", flexDirection: "column", gap: "1rem" }}
-          >
+        <Paper
+          elevation={4}
+          style={{
+            padding: '2rem',
+            width: '100%',
+            maxWidth: '480px',
+            borderRadius: '16px',
+            border: '2px solid #2f6d23',
+          }}
+        >
+          <Typography variant='h5' gutterBottom sx={{ fontWeight: '600', color: '#2f6d23' }}>
+            Create a New Task
+          </Typography>
+
+          <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
             <TextField
-              label="Title"
-              variant="outlined"
+              label='Title'
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               required
+              fullWidth
             />
             <TextField
-              label="Description"
-              variant="outlined"
+              label='Description'
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               required
+              fullWidth
               multiline
-              rows={4}
+              rows={3}
             />
             <TextField
-              label="Bounty Total"
-              variant="outlined"
-              type="number"
+              label='Task Total (credits)'
+              type='number'
               value={form.bountyTotal}
-              onChange={(e) =>
-                setForm({ ...form, bountyTotal: e.target.value })
-              }
+              onChange={(e) => setForm({ ...form, bountyTotal: e.target.value })}
               required
             />
-            <Button variant="contained" color="primary" type="submit">
-              Create Bounty
+            {marker && (
+              <Typography variant='body2' color='text.secondary'>
+                📍 {address}
+              </Typography>
+            )}
+            <Button
+              type='submit'
+              variant='contained'
+              disabled={loading}
+              sx={{
+                backgroundColor: '#2f6d23',
+                '&:hover': { backgroundColor: '#25551b' },
+                fontWeight: 600,
+                color: '#fff',
+              }}
+            >
+              {loading ? 'Creating...' : 'Create Task'}
             </Button>
           </form>
 
-          {marker && (
-            <Typography variant="body1" style={{ marginTop: "1rem" }}>
-              Selected Location: Latitude {marker.lat}, Longitude {marker.lng}
-            </Typography>
-          )}
-
           {message && (
-            <Typography variant="body2" style={{ marginTop: "1rem" }}>
+            <Typography
+              variant='body2'
+              sx={{
+                marginTop: '1rem',
+                color: message.startsWith('✅') ? '#2f6d23' : 'red',
+              }}
+            >
               {message}
             </Typography>
           )}
         </Paper>
       </div>
+
+      {/* 💬 Add Funds Dialog */}
+      <Dialog open={!!selectedTask} onClose={() => setSelectedTask(null)}>
+        <DialogTitle>Add to "{selectedTask?.title}"</DialogTitle>
+        <DialogContent>
+          <Typography variant='body2' sx={{ marginBottom: '1rem' }}>
+            Current total: {selectedTask?.bountyTotal || 0} credits
+          </Typography>
+          <TextField
+            label='Amount to add'
+            type='number'
+            value={amountToAdd}
+            onChange={(e) => setAmountToAdd(e.target.value)}
+            fullWidth
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSelectedTask(null)}>Cancel</Button>
+          <Button
+            onClick={handleAddFunds}
+            variant='contained'
+            sx={{
+              backgroundColor: '#2f6d23',
+              '&:hover': { backgroundColor: '#25551b' },
+              color: '#fff',
+            }}
+          >
+            Add Funds
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   )
 }
