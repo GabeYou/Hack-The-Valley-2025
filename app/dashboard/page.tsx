@@ -22,6 +22,9 @@ export default function DashboardPage() {
   const [bountiesCompleted, setBountiesCompleted] = useState<number | null>(null);
   const [topBountyHunter, setTopBountyHunter] = useState<string>("Loading...");
   const [totalEarned, setTotalEarned] = useState<string | null>(null);
+  const [openBounties, setOpenBounties] = useState<number | null>(null);
+  const [userCount, setUserCount] = useState<number | null>(null);
+  const [leaderboardRank, setLeaderboardRank] = useState<string | number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -98,17 +101,68 @@ export default function DashboardPage() {
       }
     }
 
+    async function fetchOpenBounties() {
+      try {
+        const res = await fetch("/api/bounties", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error("Failed to fetch open bounties");
+        }
+        const data = await res.json();
+        setOpenBounties(data.openBounties);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
+
+    async function fetchUserCount() {
+      try {
+        const res = await fetch("/api/users/count", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error("Failed to fetch user count");
+        }
+        const data = await res.json();
+        setUserCount(data.count);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
+
+    async function fetchLeaderboardRank() {
+      try {
+        const res = await fetch("/api/leaderboard/rank", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          throw new Error("Failed to fetch leaderboard rank");
+        }
+        const data = await res.json();
+        setLeaderboardRank(data.rank);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
+
     fetchWallet();
     fetchBountiesCompleted();
     fetchTopBountyHunter();
     fetchTotalEarned();
+    fetchOpenBounties();
+    fetchUserCount();
+    fetchLeaderboardRank();
   }, []);
 
   // Second row stats
   const stats = [
     {
-      label: "People Helped",
-      value: "128",
+      label: "Community",
+      value: userCount !== null ? userCount : "Loading...",
       gradient: "linear-gradient(135deg, #a8e6cf, #dcedc1)",
       icon: <GroupsIcon sx={{ fontSize: 40, color: "#2e7d32", mb: 1 }} />, // dark green
     },
@@ -126,7 +180,7 @@ export default function DashboardPage() {
     },
     {
       label: "Leaderboard Rank",
-      value: "5",
+      value: leaderboardRank !== null ? leaderboardRank : "Loading...",
       gradient: "linear-gradient(135deg, #dcedc1, #a8e6cf)",
       icon: <LeaderboardIcon sx={{ fontSize: 40, color: "#1565c0", mb: 1 }} />, // blue
     },
@@ -162,7 +216,7 @@ export default function DashboardPage() {
 
         {/* Row 1: Custom Top Row */}
         <Grid component="div" container spacing={4} sx={{ mb: 4 }}>
-          {/* Box 1: Open Bounties Near You */}
+          {/* Box 1: Open Bounties */}
           <Grid component="div" size={{ xs: 12, sm: 6, md: 3 }} sx={{ display: "flex" }}>
             <Paper
               sx={{
@@ -183,9 +237,11 @@ export default function DashboardPage() {
             >
               <LocationOnIcon sx={{ fontSize: 40, color: "#1565c0", mb: 1 }} /> {/* blue */}
               <Typography variant="h6" sx={{ mb: 1, fontWeight: 500, color: "green.900" }}>
-                Open Bounties Near You
+                Open Bounties
               </Typography>
-              <Typography variant="h4" sx={{ fontWeight: "bold", color: "green.800" }}>12</Typography>
+              <Typography variant="h4" sx={{ fontWeight: "bold", color: "green.800" }}>
+                {openBounties !== null ? openBounties : "Loading..."}
+              </Typography>
             </Paper>
           </Grid>
 
