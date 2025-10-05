@@ -26,7 +26,7 @@ export default function CreateBountyPage() {
   })
   const autocompleteRef = useRef<google.maps.places.Autocomplete | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'error' | ''>('');
-  
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [showBountyInput, setShowBountyInput] = useState(false);
   const [mapCenter, setMapCenter] = useState({ lat: 43.6532, lng: -79.3832 })
   const [marker, setMarker] = useState<{ lat: number; lng: number } | null>(null)
@@ -162,139 +162,205 @@ export default function CreateBountyPage() {
       display: 'flex',
       height: 'calc(100vh - 64px)',
       background: '#f5f5f5',
-      marginTop: '64px',
     }}
   >
-    {/* Map — 70% width */}
-    <div style={{ flex: '7 1 0', height: '100%' }}>
-      <GoogleMap
-        mapContainerStyle={{ width: '100%', height: '100%' }}
-        zoom={13}
-        center={mapCenter}
-        onClick={(e) => {
-          if (e.latLng) {
-            const newMarker = { lat: e.latLng.lat(), lng: e.latLng.lng() }
-            setMarker(newMarker)
-            setMapCenter(newMarker)
-            fetchAddress(newMarker.lat, newMarker.lng)
-          }
-        }}
-        options={{
-          disableDefaultUI: true,
-          zoomControl: true,
-          styles: [
-            { featureType: 'poi', stylers: [{ visibility: 'off' }] },
-            { featureType: 'transit', stylers: [{ visibility: 'off' }] },
-            { elementType: 'labels.text.fill', stylers: [{ color: '#555' }] },
-            { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
-          ],
-        }}
-      >
-        {tasks.map((t) => {
-          const [lat, lng] = t.location?.split(',').map(Number)
-          return (
-            <Marker
-              key={t.id}
-              position={{ lat, lng }}
-              onClick={() => setSelectedTask(t)}
-              icon={{ url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' }}
-            />
-          )
-        })}
-        {marker && (
-          <Marker
-            position={marker}
-            icon={{ url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' }}
-          />
-        )}
-      </GoogleMap>
-    </div>
+  {/* Fullscreen Map Container */}
+<div style={{ position: 'relative', flex: 1 }}>
+  <GoogleMap
+    mapContainerStyle={{ width: '100%', height: '100%' }}
+    zoom={13}
+    center={mapCenter}
+    onClick={(e) => {
+      if (e.latLng) {
+        const newMarker = { lat: e.latLng.lat(), lng: e.latLng.lng() }
+        setMarker(newMarker)
+        setMapCenter(newMarker)
+        fetchAddress(newMarker.lat, newMarker.lng)
+      }
+    }}
+    options={{
+      disableDefaultUI: true,         // disables all controls initially
+      zoomControl: true,              // re-enable zoom buttons
+      mapTypeControl: true,           // re-enable satellite toggle
+      mapTypeControlOptions: {
+        style: google.maps.MapTypeControlStyle.DEFAULT,
+        position: google.maps.ControlPosition.TOP_LEFT,
+      },
+      fullscreenControl: false,
+      streetViewControl: false,
+      scaleControl: false,
+      rotateControl: false,
+      clickableIcons: false,          // disables default POI clicks
+    
+      styles: [
+        // Hide all points of interest (businesses, landmarks, etc.)
+        { featureType: 'poi', stylers: [{ visibility: 'off' }] },
+    
+        // Hide transit stops, bus routes, etc.
+        { featureType: 'transit', stylers: [{ visibility: 'off' }] },
+    
+        // Hide road labels for a cleaner look
+        { featureType: 'road', elementType: 'labels.icon', stylers: [{ visibility: 'off' }] },
+    
+        // Desaturate land colors slightly for clarity
+        { elementType: 'geometry', stylers: [{ saturation: -10 }] },
+    
+        // Improve label legibility
+        { elementType: 'labels.text.fill', stylers: [{ color: '#555' }] },
+        { elementType: 'labels.text.stroke', stylers: [{ color: '#ffffff' }] },
+      ],
+    }}
+    
+  >
+    {tasks.map((t) => {
+      const [lat, lng] = t.location?.split(',').map(Number)
+      return (
+        <Marker
+          key={t.id}
+          position={{ lat, lng }}
+          onClick={() => setSelectedTask(t)}
+          icon={{ url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' }}
+        />
+      )
+    })}
+    {marker && (
+      <Marker
+        position={marker}
+        icon={{ url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' }}
+      />
+    )}
+  </GoogleMap>
 
-    {/* Form — 30% width */}
-    <div
-      style={{
-        flex: '3 1 0',
-        padding: '1rem',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#d8ffb1',
-        borderLeft: '1px solid #ddd',
+  {/* Floating Form Panel */}
+  <Paper
+    elevation={5}
+    style={{
+      position: 'absolute',
+      top: '5%',
+      right: '1%',
+      width: '380px',
+      padding: '1.75rem',
+      backgroundColor: '#ffffffee', // translucent for map visibility
+      borderRadius: '16px',
+      border: '2px solid #2f6d23',
+      backdropFilter: 'blur(6px)',
+    }}
+  >
+    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <Typography variant="h5" sx={{ fontWeight: '600', color: '#2f6d23' }}>
+      Create a New Task
+    </Typography>
+
+    <Typography
+      variant="body2"
+      sx={{
+        color: '#2f6d23',
+        cursor: 'pointer',
+        textDecoration: 'underline',
+        fontWeight: 'bold',
       }}
+      onClick={() => setInstructionsOpen(true)}
     >
-      <Paper
-        elevation={4}
-        style={{
-          padding: '2rem',
-          width: '100%',
-          maxWidth: '420px',
-          borderRadius: '16px',
-          border: '2px solid #2f6d23',
+      Instructions
+    </Typography>
+  </Box>
+
+    <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <TextField
+        label="Title"
+        value={form.title}
+        onChange={(e) => setForm({ ...form, title: e.target.value })}
+        required
+        fullWidth
+      />
+      <TextField
+        label="Description"
+        value={form.description}
+        onChange={(e) => setForm({ ...form, description: e.target.value })}
+        required
+        fullWidth
+        multiline
+        rows={3}
+      />
+      <Autocomplete onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)} onPlaceChanged={handlePlaceChanged}>
+        <TextField label="Location" value={address} onChange={(e) => setAddress(e.target.value)} required fullWidth />
+      </Autocomplete>
+
+      {!showBountyInput ? (
+        <Typography
+          variant="body2"
+          sx={{
+            color: '#2f6d23',
+            cursor: 'pointer',
+            textDecoration: 'underline',
+            fontWeight: 'bold',
+          }}
+          onClick={() => setShowBountyInput(true)}
+        >
+          Add Initial Contribution
+        </Typography>
+      ) : (
+        <TextField
+          label="Task Total (credits)"
+          type="number"
+          value={form.bountyTotal}
+          onChange={(e) => setForm({ ...form, bountyTotal: e.target.value })}
+          fullWidth
+        />
+      )}
+
+      <Button
+        type="submit"
+        onClick={() => setShowBountyInput(false)}
+        variant="contained"
+        disabled={loading}
+        sx={{
+          backgroundColor: '#2f6d23',
+          '&:hover': { backgroundColor: '#25551b' },
+          fontWeight: 600,
+          color: '#fff',
         }}
       >
-        <Typography variant="h5" gutterBottom sx={{ fontWeight: '600', color: '#2f6d23' }}>
-          Create a New Task
-        </Typography>
+        {loading ? 'Creating...' : 'Create Task'}
+      </Button>
+    </form>
 
-        <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          <TextField label="Title" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required fullWidth />
-          <TextField label="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required fullWidth multiline rows={3} />
-          <Autocomplete
-            onLoad={(autocomplete) => (autocompleteRef.current = autocomplete)}
-            onPlaceChanged={handlePlaceChanged}
-          >
-            <TextField
-              label="Location"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-              required
-              fullWidth
-            />
-          </Autocomplete>
-          {!showBountyInput ? (
-            <Typography
-              variant="body2"
-              sx={{
-                color: '#2f6d23',
-                cursor: 'pointer',
-                textDecoration: 'underline',
-                fontWeight: 'bold',
-              }}
-              onClick={() => setShowBountyInput(true)}
-            >
-              Add Initial Contribution
-            </Typography>
-          ) : (
-            <TextField
-              label="Task Total (credits)"
-              type="number"
-              value={form.bountyTotal}
-              onChange={(e) => setForm({ ...form, bountyTotal: e.target.value })}
-              fullWidth
-            />
-          )}
-        
+    {message && (
+      <Typography
+        variant="body2"
+        sx={{
+          marginTop: '1rem',
+          color: messageType === 'success' ? '#2f6d23' : 'red',
+        }}
+      >
+        {message}
+      </Typography>
+    )}
+  </Paper>
+</div>
 
-          <Button type="submit" onClick={()=>{setShowBountyInput(false)}} variant="contained" disabled={loading} sx={{ backgroundColor: '#2f6d23', '&:hover': { backgroundColor: '#25551b' }, fontWeight: 600, color: '#fff' }}>
-            {loading ? 'Creating...' : 'Create Task'}
-          </Button>
-        </form>
-
-        {message && (
-<Typography
-  variant="body2"
-  sx={{
-    marginTop: '1rem',
-    color: messageType === 'success' ? '#2f6d23' : 'red'
-  }}
->
-  {message}
-</Typography>
-)}
-
-      </Paper>
-    </div>
-
+{/* Instructions Modal */}
+<Dialog open={instructionsOpen} onClose={() => setInstructionsOpen(false)} maxWidth="sm" fullWidth>
+  <DialogTitle sx={{ fontWeight: 600, color: '#2f6d23' }}>
+    How to Use This Map
+  </DialogTitle>
+  <DialogContent dividers>
+    <Typography variant="body1" gutterBottom>
+      <strong>Map Controls:</strong> Click on the map to set a location for your task. Use the zoom buttons and the map/satellite toggle to adjust your view.
+    </Typography>
+    <Typography variant="body1" gutterBottom>
+      <strong>Create a Task:</strong> Fill in the title, description, and location. Optionally add an initial bounty. Click "Create Task" to add it to the map.
+    </Typography>
+    <Typography variant="body1" gutterBottom>
+      <strong>Contributing to Tasks:</strong> Click on an existing marker to see the task details and add funds.
+    </Typography>
+  </DialogContent>
+  <DialogActions>
+    <Button onClick={() => setInstructionsOpen(false)} sx={{ color: '#2f6d23' }}>
+      Close
+    </Button>
+  </DialogActions>
+</Dialog>
     {/* Contribute Dialog */}
     <Dialog open={!!selectedTask} onClose={() => setSelectedTask(null)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: '16px', padding: '1.5rem', backgroundColor: '#f9f9f9' } }}>
       <DialogTitle sx={{ fontSize: '1.5rem', fontWeight: 600, color: '#2f6d23', textAlign: 'center', pb: 1 }}>
